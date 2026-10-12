@@ -1,9 +1,4 @@
--- =============================================
--- Script de creación de la base de datos
--- Gestión de Usuarios - Arquitectura Hexagonal
--- PostgreSQL (Render) — la base de datos ya está
--- provisionada por Render, no se crea aquí.
--- =============================================
+
 
 CREATE TABLE IF NOT EXISTS users (
     id          VARCHAR(36)  NOT NULL PRIMARY KEY,

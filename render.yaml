@@ -16,7 +16,7 @@ services:
           name: users-management-db
           property: host
       - key: DB_PORT
-        fromDatabase:
+        fromDatabase:a
           name: users-management-db
           property: port
       - key: DB_NAME
