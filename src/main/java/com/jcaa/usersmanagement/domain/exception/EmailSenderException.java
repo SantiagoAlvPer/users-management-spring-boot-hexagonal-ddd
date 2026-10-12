@@ -4,7 +4,7 @@ public final class EmailSenderException extends DomainException {
 
   private static final String DEFAULT_MESSAGE = "La notificación por correo no pudo ser enviada.";
   private static final String MESSAGE_WITH_DETAIL =
-      "No se pudo enviar el correo a '%s'. Error SMTP: %s";
+      "No se pudo enviar el correo al proveedor. Detalle: %s";
 
   public EmailSenderException(final String message) {
     super(message);
@@ -14,10 +14,8 @@ public final class EmailSenderException extends DomainException {
     super(message, cause);
   }
 
-  public static EmailSenderException becauseSmtpFailed(
-      final String destinationEmail, final String smtpError) {
-    return new EmailSenderException(
-        String.format(MESSAGE_WITH_DETAIL, destinationEmail, smtpError));
+  public static EmailSenderException becauseDeliveryFailed(final String providerError) {
+    return new EmailSenderException(String.format(MESSAGE_WITH_DETAIL, providerError));
   }
 
   public static EmailSenderException becauseSendFailed(final Throwable cause) {

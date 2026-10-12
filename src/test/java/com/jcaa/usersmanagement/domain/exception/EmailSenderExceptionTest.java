@@ -1,43 +1,31 @@
 package com.jcaa.usersmanagement.domain.exception;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests para EmailSenderException.
- *
- * <p>De paso cubre el constructor de dos argumentos de {@code DomainException} (abstracta),
- * alcanzable sólo a través de {@code becauseSendFailed(cause)}.
- */
 @DisplayName("EmailSenderException")
 class EmailSenderExceptionTest {
 
-  // ── becauseSmtpFailed()
-
   @Test
-  @DisplayName("becauseSmtpFailed() debe formatear el mensaje incluyendo el email y el error SMTP")
-  void shouldFormatMessageWithEmailAndSmtpError() {
+  @DisplayName("becauseDeliveryFailed() incluye el detalle del proveedor")
+  void shouldIncludeProviderErrorInMessage() {
     // Arrange
-    final String destinationEmail = "user@example.com";
-    final String smtpError = "Connection refused";
+    final String providerError = "401 Unauthorized";
 
     // Act
-    final String message =
-        EmailSenderException.becauseSmtpFailed(destinationEmail, smtpError).getMessage();
+    final String message = EmailSenderException.becauseDeliveryFailed(providerError).getMessage();
 
     // Assert
-    assertAll(
-        "becauseSmtpFailed",
-        () -> assertTrue(message.contains(destinationEmail), "el mensaje debe contener el email"),
-        () -> assertTrue(message.contains(smtpError), "el mensaje debe contener el error SMTP"));
+    assertTrue(message.contains(providerError));
   }
 
-  // ── becauseSendFailed()
-
   @Test
-  @DisplayName("becauseSendFailed() debe encapsular la causa y producir un mensaje no vacío")
+  @DisplayName("becauseSendFailed() encapsula la causa y produce mensaje no vacío")
   void shouldWrapCauseAndProduceNonBlankMessage() {
     // Arrange
     final Throwable cause = new RuntimeException("IO error");
@@ -47,10 +35,7 @@ class EmailSenderExceptionTest {
 
     // Assert
     assertAll(
-        "becauseSendFailed",
-        () -> assertSame(cause, exception.getCause(), "debe encapsular la causa original"),
-        () ->
-            assertFalse(
-                exception.getMessage().isBlank(), "el mensaje por defecto no debe estar vacío"));
+        () -> assertSame(cause, exception.getCause()),
+        () -> assertFalse(exception.getMessage().isBlank()));
   }
 }

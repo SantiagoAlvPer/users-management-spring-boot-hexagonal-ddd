@@ -11,8 +11,8 @@
   </parent>
 
   <groupId>com.jcaa.usersmanagement</groupId>
-  <artifactId>users-management</artifactId>
-  <version>2.1.0</version>
+  <artifactId>notifications-service</artifactId>
+  <version>1.0.0</version>
 
   <properties>
     <!-- El parent de Spring Boot usa java.version para configurar el compilador -->
@@ -20,10 +20,6 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- Versiones de dependencias no gestionadas por el BOM de Spring Boot -->
     <lombok.version>1.18.36</lombok.version>
-    <postgresql.version>42.7.4</postgresql.version>
-    <javamail.version>1.6.2</javamail.version>
-    <bcrypt.version>0.10.2</bcrypt.version>
-    <jjwt.version>0.13.0</jjwt.version>
     <!-- Declarativas: Mockito y Jacoco siguen siendo explícitas para tener control -->
     <mockito.version>5.15.2</mockito.version>
     <jacoco.version>0.8.11</jacoco.version>
@@ -41,12 +37,6 @@
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
 
-    <!-- JDBC: incluye HikariCP DataSource y spring-jdbc -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-jdbc</artifactId>
-    </dependency>
-
     <!-- Validation: jakarta.validation-api + hibernate-validator
          En Spring Boot 3.x este starter se separó de spring-boot-starter-web -->
     <dependency>
@@ -56,7 +46,12 @@
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-security</artifactId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.kafka</groupId>
+      <artifactId>spring-kafka</artifactId>
     </dependency>
 
     <!-- ======================================================== -->
@@ -65,65 +60,10 @@
 
     <!-- Lombok: reducción de boilerplate — versión explícita (superior a la del BOM) -->
     <dependency>
-      <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <version>${lombok.version}</version>
+      <groupId>org.projectlombok</groupId>
       <scope>provided</scope>
-    </dependency>
-
-    <!-- PostgreSQL JDBC Driver -->
-    <dependency>
-      <groupId>org.postgresql</groupId>
-      <artifactId>postgresql</artifactId>
-      <version>${postgresql.version}</version>
-    </dependency>
-
-    <!-- JavaMail API (javax.mail legacy — NO migrado a jakarta.mail, intencional) -->
-    <dependency>
-      <groupId>com.sun.mail</groupId>
-      <artifactId>javax.mail</artifactId>
-      <version>${javamail.version}</version>
-    </dependency>
-
-    <!-- BCrypt para hashing de contraseñas -->
-    <dependency>
-      <groupId>at.favre.lib</groupId>
-      <artifactId>bcrypt</artifactId>
-      <version>${bcrypt.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>io.jsonwebtoken</groupId>
-      <artifactId>jjwt-api</artifactId>
-      <version>${jjwt.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.jsonwebtoken</groupId>
-      <artifactId>jjwt-impl</artifactId>
-      <version>${jjwt.version}</version>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.jsonwebtoken</groupId>
-      <artifactId>jjwt-jackson</artifactId>
-      <version>${jjwt.version}</version>
-      <scope>runtime</scope>
-    </dependency>
-
-    <!-- SpringDoc OpenAPI — Swagger UI en /swagger-ui.html -->
-    <dependency>
-      <groupId>org.springdoc</groupId>
-      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-      <version>2.6.0</version>
-    </dependency>
-
-    <!-- Swagger annotations — declarada explícitamente para que el IDE las indexe
-         (springdoc-openapi la incluye transitivamente, pero algunos IDEs
-          necesitan verla directa en el pom para resolver los símbolos) -->
-    <dependency>
-      <groupId>io.swagger.core.v3</groupId>
-      <artifactId>swagger-annotations-jakarta</artifactId>
-      <version>2.2.22</version>
     </dependency>
 
     <!-- ======================================================== -->
@@ -137,8 +77,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-test</artifactId>
+      <groupId>org.springframework.kafka</groupId>
+      <artifactId>spring-kafka-test</artifactId>
       <scope>test</scope>
     </dependency>
 

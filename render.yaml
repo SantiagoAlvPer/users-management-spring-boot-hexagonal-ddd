@@ -1,49 +1,20 @@
-databases:
-  - name: users-management-db
-    plan: free
-    databaseName: crud_usuarios
-    user: users_management
-
 services:
   - type: web
-    name: users-management
+    name: notifications-service
     runtime: docker
     plan: free
     dockerfilePath: ./Dockerfile
+    healthCheckPath: /actuator/health
     envVars:
-      - key: DB_HOST
-        fromDatabase:
-          name: users-management-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:a
-          name: users-management-db
-          property: port
-      - key: DB_NAME
-        fromDatabase:
-          name: users-management-db
-          property: database
-      - key: DB_USERNAME
-        fromDatabase:
-          name: users-management-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: users-management-db
-          property: password
-      - key: JWT_SECRET
+      - key: KAFKA_BOOTSTRAP_SERVERS
         sync: false
-      - key: JWT_EXPIRATION_SECONDS
-        value: "900"
-      - key: SMTP_HOST
-        value: smtp.gmail.com
-      - key: SMTP_PORT
-        value: "587"
-      - key: SMTP_USERNAME
+      - key: KAFKA_GROUP_ID
+        value: notifications-service
+      - key: KAFKA_TOPIC_USER_CREATED
+        value: user.created
+      - key: BREVO_API_KEY
         sync: false
-      - key: SMTP_PASSWORD
+      - key: BREVO_SENDER_EMAIL
         sync: false
-      - key: SMTP_FROM_ADDRESS
-        sync: false
-      - key: SMTP_FROM_NAME
+      - key: BREVO_SENDER_NAME
         value: Gestion de Usuarios
