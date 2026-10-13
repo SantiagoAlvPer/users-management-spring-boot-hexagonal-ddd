@@ -8,11 +8,11 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: aiven
-      # TiDB Cloud (MySQL)
+      # PostgreSQL de Render (copiar los datos "Internal" de la base)
       - key: DB_HOST
         sync: false
       - key: DB_PORT
-        value: "4000"
+        value: "5432"
       - key: DB_NAME
         sync: false
       - key: DB_USERNAME
@@ -20,7 +20,7 @@ services:
       - key: DB_PASSWORD
         sync: false
       - key: DB_SSL_MODE
-        value: VERIFY_IDENTITY
+        value: prefer
       # Aiven Kafka
       - key: KAFKA_BOOTSTRAP_SERVERS
         sync: false

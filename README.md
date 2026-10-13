@@ -1,10 +1,10 @@
 # Accounts Service — Spring Boot, Hexagonal + DDD
 
-Microservicio de cuentas (wallet). Recibe la orden de crear la cuenta desde **Users**, la guarda en **TiDB (MySQL)** y publica el evento `account.created` en **Kafka (Aiven)**.
+Microservicio de cuentas (wallet). Recibe la orden de crear la cuenta desde **Users**, la guarda en **PostgreSQL** y publica el evento `account.created` en **Kafka (Aiven)**.
 
 ```
 Paso 5: Users  --POST /api/accounts (sync)-->  accounts
-Paso 6: accounts --INSERT accounts (sync)-->   TiDB / MySQL
+Paso 6: accounts --INSERT accounts (sync)-->   PostgreSQL
 Paso 7: accounts --account.created (async)-->  Kafka (Aiven)
 ```
 
@@ -18,7 +18,7 @@ application/
                            PublishAccountCreatedEventPort
   service/                 Implementaciones de los casos de uso (+ dto command/query, mapper)
 infrastructure/
-  adapter/persistence/     AccountRepositoryMySQL (JDBC puro, sin JPA)
+  adapter/persistence/     AccountRepositoryPostgres (JDBC puro, sin JPA)
   adapter/messaging/       KafkaAccountEventPublisherAdapter (productor Kafka)
   entrypoint/rest/         AccountRestController + GlobalExceptionHandler
   config/                  DataSourceSpringConfig (HikariCP)
@@ -77,12 +77,12 @@ La publicación es asíncrona: si Kafka falla, el error queda en el log y la cue
 
 | Variable | Descripción | Default |
 |---|---|---|
-| `DB_HOST` | Host de TiDB / MySQL | `localhost` |
-| `DB_PORT` | Puerto (TiDB Cloud usa `4000`) | `3306` |
+| `DB_HOST` | Host de PostgreSQL | `localhost` |
+| `DB_PORT` | Puerto | `5432` |
 | `DB_NAME` | Base de datos | `wallet` |
-| `DB_USERNAME` | Usuario (en TiDB Cloud tiene la forma `xxxx.root`) | `root` |
-| `DB_PASSWORD` | Contraseña | `root` |
-| `DB_SSL_MODE` | `VERIFY_IDENTITY` para TiDB Cloud, `PREFERRED` en local | `PREFERRED` |
+| `DB_USERNAME` | Usuario | `postgres` |
+| `DB_PASSWORD` | Contraseña | `postgres` |
+| `DB_SSL_MODE` | `prefer` con el host interno de Render, `require` con el externo | `prefer` |
 | `KAFKA_BOOTSTRAP_SERVERS` | Brokers | `localhost:9092` |
 | `KAFKA_TOPIC_ACCOUNT_CREATED` | Topic | `account.created` |
 | `SPRING_PROFILES_ACTIVE` | `aiven` para conectarse a Aiven | — |
@@ -91,8 +91,10 @@ La publicación es asíncrona: si Kafka falla, el error queda en el log y la cue
 
 La tabla `accounts` se crea sola al arrancar (`schema.sql`, `CREATE TABLE IF NOT EXISTS`).
 
-### TiDB Cloud
-En el cluster: **Connect** → copiar host, puerto, usuario y contraseña. Crear la base `wallet` (o la que pongan en `DB_NAME`). Users y accounts pueden compartir el cluster: cada uno tiene su tabla.
+### PostgreSQL en Render
+1. En Render: **New → Postgres**, plan **Free**, misma región que el web service. Si el equipo ya tiene una base Postgres (por ejemplo la de Users), se puede reutilizar: accounts solo usa su propia tabla `accounts`.
+2. En la base → **Connections**: copiar los datos **Internal** (Hostname, Port, Database, Username, Password) a las variables `DB_*` del servicio accounts.
+3. El host interno solo funciona entre servicios de Render. Para conectarse desde tu PC usa el host **External** con `DB_SSL_MODE=require`.
 
 ### Aiven Kafka
 1. En el servicio Kafka: *Advanced configuration* → activar `kafka_authentication_methods.sasl`.
@@ -102,7 +104,7 @@ En el cluster: **Connect** → copiar host, puerto, usuario y contraseña. Crear
 ## Probar local
 
 ```bash
-docker compose up -d          # MySQL + Kafka
+docker compose up -d          # PostgreSQL + Kafka
 ./mvnw spring-boot:run
 
 # crear cuenta

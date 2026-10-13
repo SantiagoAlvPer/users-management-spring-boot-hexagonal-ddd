@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
- * Paso 5-7 del flujo: Users pide crear la cuenta (sync), se guarda en TiDB (sync) y se publica
+ * Paso 5-7 del flujo: Users pide crear la cuenta (sync), se guarda en PostgreSQL (sync) y se publica
  * {@code account.created} en Kafka (async).
  */
 @Slf4j

@@ -50,11 +50,10 @@ public class DataSourceSpringConfig {
     hikariConfig.setJdbcUrl(config.buildJdbcUrl());
     hikariConfig.setUsername(config.username());
     hikariConfig.setPassword(config.password());
-    // Pool pequeno: plan free de Render + TiDB Serverless
+    // Pool pequeno: el Postgres free de Render admite pocas conexiones
     hikariConfig.setMaximumPoolSize(5);
     hikariConfig.setMinimumIdle(1);
     hikariConfig.setConnectionTimeout(30_000);
-    // TiDB Serverless cierra conexiones inactivas: reciclarlas antes
     hikariConfig.setMaxLifetime(300_000);
     hikariConfig.setIdleTimeout(60_000);
 

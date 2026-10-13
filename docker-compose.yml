@@ -1,12 +1,13 @@
-# Entorno local: MySQL (en lugar de TiDB) + Kafka (KRaft, sin Zookeeper).
+# Entorno local: PostgreSQL + Kafka (KRaft, sin Zookeeper).
 services:
-  mysql:
-    image: mysql:8.0
+  postgres:
+    image: postgres:16-alpine
     ports:
-      - "3306:3306"
+      - "5432:5432"
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: wallet
+      POSTGRES_DB: wallet
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
 
   kafka:
     image: apache/kafka:3.8.0
