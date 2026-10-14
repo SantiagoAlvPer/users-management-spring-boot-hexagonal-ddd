@@ -136,6 +136,7 @@ public class KafkaConsumerConfig {
             new FixedBackOff(1000L, 2L));
 
     factory.setCommonErrorHandler(errorHandler);
+    factory.getContainerProperties().setMissingTopicsFatal(false);
     return factory;
   }
 }

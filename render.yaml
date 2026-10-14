@@ -3,6 +3,7 @@ services:
     name: notifiers
     runtime: docker
     plan: free
+    healthCheckPath: /health
     dockerfilePath: ./Dockerfile
     envVars:
       - key: PORT
