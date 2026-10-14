@@ -22,10 +22,20 @@ automático de cada commit que llegue a la rama `main`.
 2. Completar en el panel los secretos marcados como requeridos: `DB_HOST`,
    `DB_USERNAME`, `DB_PASSWORD`, `SMTP_USERNAME`, `SMTP_PASSWORD` y
    `SMTP_FROM_ADDRESS`.
-3. Usar una instancia MySQL accesible desde Internet o desde la red privada de
+3. Usar una instancia PostgreSQL accesible desde Internet o desde la red privada de
    Render y ejecutar `src/main/resources/schema.sql` una vez para crear el esquema.
 4. Desplegar el Blueprint. La API quedará disponible en el subdominio
    `onrender.com` asignado por Render y Swagger UI en `/swagger-ui.html`.
 
 Las credenciales nunca deben guardarse en `application.properties` ni en
 `render.yaml`. Para desarrollo local, deben proporcionarse como variables de entorno.
+
+## Notificaciones por eventos (Kafka)
+
+Al crear un usuario, `CreateUserService` ya no envía correo: publica `UserCreatedDomainEvent` por el puerto `PublishUserEventPort` (adaptador `KafkaUserEventPublisherAdapter`) en el topic `user.created`. El microservicio de notificaciones consume ese topic y envía el correo con Brevo.
+
+- Mensaje: `{"eventName","occurredOn","payload":{"id","name","email","role","status"}}`, key = id de usuario. No incluye contraseña.
+- Si Kafka no responde, el usuario se crea igual y se registra el error técnico (`max.block.ms` = 3 s).
+- Variables: `KAFKA_BOOTSTRAP_SERVERS` (default `localhost:9092`), `KAFKA_TOPIC_PREFIX` (opcional).
+- Kafka local: `docker compose up -d kafka` (la API en compose usa `kafka:29092`).
+- Las notificaciones de actualización siguen enviándose por SMTP (pendiente de migrar).

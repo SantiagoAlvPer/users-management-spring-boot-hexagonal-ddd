@@ -8,7 +8,7 @@ public record DatabaseConfig(
     String password,
     String sslMode) {
   private static final String URL_TEMPLATE =
-      "jdbc:mysql://%s:%d/%s?sslMode=%s&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+      "jdbc:postgresql://%s:%d/%s?sslmode=%s";
 
   public String buildJdbcUrl() {
     return String.format(URL_TEMPLATE, host, port, databaseName, sslMode);

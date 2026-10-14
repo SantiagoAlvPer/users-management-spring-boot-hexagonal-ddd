@@ -5,10 +5,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.jcaa.usersmanagement.application.port.out.GetUserByEmailPort;
+import com.jcaa.usersmanagement.application.port.out.PublishUserEventPort;
 import com.jcaa.usersmanagement.application.port.out.SaveUserPort;
 import com.jcaa.usersmanagement.application.service.dto.command.CreateUserCommand;
 import com.jcaa.usersmanagement.domain.enums.UserRole;
 import com.jcaa.usersmanagement.domain.enums.UserStatus;
+import com.jcaa.usersmanagement.domain.event.DomainEvent;
+import com.jcaa.usersmanagement.domain.event.UserCreatedDomainEvent;
 import com.jcaa.usersmanagement.domain.exception.UserAlreadyExistsException;
 import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
@@ -23,13 +26,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Tests para CreateUserService.
  *
- * <p>Cubre: validación del command, email duplicado y flujo feliz (save + notificación).
+ * <p>Cubre: validación del command, email duplicado y flujo feliz (save + evento Kafka).
  */
 @DisplayName("CreateUserService")
 @ExtendWith(MockitoExtension.class)
@@ -37,7 +41,7 @@ class CreateUserServiceTest {
 
   @Mock private SaveUserPort saveUserPort;
   @Mock private GetUserByEmailPort getUserByEmailPort;
-  @Mock private EmailNotificationService emailNotificationService;
+  @Mock private PublishUserEventPort publishUserEventPort;
 
   private CreateUserService service;
 
@@ -48,7 +52,7 @@ class CreateUserServiceTest {
           new CreateUserService(
               saveUserPort,
               getUserByEmailPort,
-              emailNotificationService,
+              publishUserEventPort,
               validatorFactory.getValidator());
     }
   }
@@ -56,8 +60,8 @@ class CreateUserServiceTest {
   // ── flujo feliz
 
   @Test
-  @DisplayName("execute() guarda el usuario y envía notificación cuando el email no existe")
-  void shouldSaveUserAndNotifyWhenEmailIsNew() {
+  @DisplayName("execute() guarda el usuario y publica el evento user.created cuando el email no existe")
+  void shouldSaveUserAndPublishEventWhenEmailIsNew() {
     // Arrange
     final CreateUserCommand command =
         new CreateUserCommand("u-01", "John Arrieta", "john@example.com", "Pass1234", "ADMIN");
@@ -84,7 +88,13 @@ class CreateUserServiceTest {
         () -> assertEquals("u-01", result.getId().value(), "id del usuario guardado"));
 
     verify(saveUserPort).save(any(UserModel.class));
-    verify(emailNotificationService).notifyUserCreated(savedUser, "Pass1234");
+    final ArgumentCaptor<DomainEvent> eventCaptor = ArgumentCaptor.forClass(DomainEvent.class);
+    verify(publishUserEventPort).publish(eventCaptor.capture());
+    assertAll(
+        "evento publicado",
+        () -> assertInstanceOf(UserCreatedDomainEvent.class, eventCaptor.getValue()),
+        () -> assertEquals("u-01", eventCaptor.getValue().payload().get("id")),
+        () -> assertFalse(eventCaptor.getValue().payload().containsKey("password")));
   }
 
   // ── email duplicado
@@ -110,7 +120,7 @@ class CreateUserServiceTest {
     // Act & Assert
     assertThrows(UserAlreadyExistsException.class, () -> service.execute(command));
     verify(saveUserPort, never()).save(any());
-    verify(emailNotificationService, never()).notifyUserCreated(any(), any());
+    verify(publishUserEventPort, never()).publish(any());
   }
 
   // ── validación del command
@@ -125,6 +135,6 @@ class CreateUserServiceTest {
 
     // Act & Assert
     assertThrows(ConstraintViolationException.class, () -> service.execute(command));
-    verifyNoInteractions(saveUserPort, getUserByEmailPort, emailNotificationService);
+    verifyNoInteractions(saveUserPort, getUserByEmailPort, publishUserEventPort);
   }
 }

@@ -18,7 +18,7 @@ services:
       - key: DB_PASSWORD
         sync: false
       - key: DB_SSL_MODE
-        value: REQUIRED
+        value: require
       - key: SMTP_HOST
         value: smtp.gmail.com
       - key: SMTP_PORT

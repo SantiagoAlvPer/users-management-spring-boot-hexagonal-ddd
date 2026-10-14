@@ -20,12 +20,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class EmailNotificationService {
 
-  private static final String SUBJECT_CREATED = "Tu cuenta ha sido creada — Gestion de Usuarios";
   private static final String SUBJECT_UPDATED  = "Tu cuenta ha sido actualizada — Gestion de Usuarios";
 
   private static final String TOKEN_NAME     = "name";
   private static final String TOKEN_EMAIL    = "email";
-  private static final String TOKEN_PASSWORD = "password";
   private static final String TOKEN_ROLE     = "role";
   private static final String TOKEN_STATUS   = "status";
 
@@ -33,21 +31,6 @@ public class EmailNotificationService {
       "[EmailNotificationService] correo no enviado. Causa: {}";
 
   private final EmailSenderPort emailSenderPort;
-
-  @Async("notificationExecutor")
-  public void notifyUserCreated(final UserModel user, final String plainPassword) {
-    final String template = loadTemplate("user-created.html");
-    final String body =
-        renderTemplate(
-            template,
-            Map.of(
-                TOKEN_NAME,     user.getName().value(),
-                TOKEN_EMAIL,    user.getEmail().value(),
-                TOKEN_PASSWORD, plainPassword,
-                TOKEN_ROLE,     user.getRole().name()));
-    final EmailDestinationModel destination = buildDestination(user, SUBJECT_CREATED, body);
-    sendOrLog(destination);
-  }
 
   @Async("notificationExecutor")
   public void notifyUserUpdated(final UserModel user) {

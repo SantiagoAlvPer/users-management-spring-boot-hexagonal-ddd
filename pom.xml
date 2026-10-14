@@ -20,7 +20,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- Versiones de dependencias no gestionadas por el BOM de Spring Boot -->
     <lombok.version>1.18.36</lombok.version>
-    <mysql.connector.version>9.3.0</mysql.connector.version>
+    <postgresql.version>42.7.4</postgresql.version>
     <javamail.version>1.6.2</javamail.version>
     <bcrypt.version>0.10.2</bcrypt.version>
     <jjwt.version>0.13.0</jjwt.version>
@@ -47,6 +47,12 @@
       <artifactId>spring-boot-starter-jdbc</artifactId>
     </dependency>
 
+    <!-- Kafka: publicación de eventos de dominio -->
+    <dependency>
+      <groupId>org.springframework.kafka</groupId>
+      <artifactId>spring-kafka</artifactId>
+    </dependency>
+
     <!-- Validation: jakarta.validation-api + hibernate-validator
          En Spring Boot 3.x este starter se separó de spring-boot-starter-web -->
     <dependency>
@@ -71,11 +77,11 @@
       <scope>provided</scope>
     </dependency>
 
-    <!-- MySQL JDBC Connector -->
+    <!-- PostgreSQL JDBC Driver -->
     <dependency>
-      <groupId>com.mysql</groupId>
-      <artifactId>mysql-connector-j</artifactId>
-      <version>${mysql.connector.version}</version>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>${postgresql.version}</version>
     </dependency>
 
     <!-- JavaMail API (javax.mail legacy — NO migrado a jakarta.mail, intencional) -->

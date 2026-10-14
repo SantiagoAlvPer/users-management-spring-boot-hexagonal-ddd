@@ -26,7 +26,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 class AsyncEmailNotificationServiceTest {
 
   @Test
-  @DisplayName("La creación de usuario no espera a que termine el envío SMTP")
+  @DisplayName("La actualización de usuario no espera a que termine el envío SMTP")
   void shouldReturnWithoutWaitingForEmailDelivery() throws InterruptedException {
     final EmailSenderPort emailSenderPort = mock(EmailSenderPort.class);
     final CountDownLatch sendingStarted = new CountDownLatch(1);
@@ -49,7 +49,7 @@ class AsyncEmailNotificationServiceTest {
       try {
         assertTimeout(
             Duration.ofSeconds(1),
-            () -> service.notifyUserCreated(createUser(), "Secure123!"));
+            () -> service.notifyUserUpdated(createUser()));
         assertTrue(sendingStarted.await(1, TimeUnit.SECONDS));
       } finally {
         allowSendingToFinish.countDown();
