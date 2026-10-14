@@ -63,6 +63,10 @@ public class BrevoEmailSenderAdapter implements EmailSenderPort {
           "[BrevoEmailSenderAdapter] correo aceptado por Brevo para {}.",
           destination.getDestinationEmail());
     } catch (final RestClientResponseException exception) {
+      log.error(
+          "[BrevoEmailSenderAdapter] Brevo respondió HTTP {}: {}",
+          exception.getStatusCode().value(),
+          exception.getResponseBodyAsString());
       throw EmailSenderException.becauseApiFailed(
           destination.getDestinationEmail(), "HTTP " + exception.getStatusCode().value());
     } catch (final CallNotPermittedException exception) {
