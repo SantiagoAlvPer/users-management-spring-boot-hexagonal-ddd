@@ -41,6 +41,8 @@ services:
         value: SASL_SSL
       - key: KAFKA_SASL_MECHANISM
         value: SCRAM-SHA-256
+      - key: KAFKA_SSL_CA_PEM
+        sync: false
       - key: KAFKA_USERNAME
         sync: false
       - key: KAFKA_PASSWORD
