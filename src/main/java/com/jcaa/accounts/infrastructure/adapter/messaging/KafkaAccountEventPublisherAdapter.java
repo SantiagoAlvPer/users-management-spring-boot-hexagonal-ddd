@@ -8,6 +8,7 @@ import com.jcaa.accounts.infrastructure.adapter.messaging.dto.AccountEventMessag
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.NestedExceptionUtils;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
@@ -48,7 +49,7 @@ public class KafkaAccountEventPublisherAdapter implements PublishAccountCreatedE
           .whenComplete(
               (result, error) -> {
                 if (Objects.nonNull(error)) {
-                  log.error(LOG_FAILED, topic, accountId, error.getMessage());
+                  log.error(LOG_FAILED, topic, accountId, rootCause(error));
                   return;
                 }
                 log.info(
@@ -59,8 +60,14 @@ public class KafkaAccountEventPublisherAdapter implements PublishAccountCreatedE
                     accountId);
               });
     } catch (final JsonProcessingException | RuntimeException exception) {
-      log.error(LOG_FAILED, topic, accountId, exception.getMessage());
+      log.error(LOG_FAILED, topic, accountId, rootCause(exception));
     }
+  }
+
+  /** Mensaje de la causa raiz (p.ej. certificado o bootstrap-servers invalidos). */
+  private static String rootCause(final Throwable error) {
+    final Throwable cause = NestedExceptionUtils.getMostSpecificCause(error);
+    return cause.getClass().getSimpleName() + ": " + cause.getMessage();
   }
 
   private static AccountEventMessage toMessage(final AccountCreatedDomainEvent event) {
