@@ -22,11 +22,12 @@ public class BrevoSpringConfig {
   @Bean
   public BrevoConfig brevoConfig(
       @Value("${brevo.base-url:https://api.brevo.com}") final String baseUrl,
-      @Value("${brevo.local.api-key:${brevo.api-key:xkeysib-default-placeholder-key}}")
+      @Value("${brevo.local.api-key:${brevo.api-key:${BREVO_API_KEY:${SMTP_PASSWORD:xkeysib-default-placeholder-key}}}}")
           final String apiKey,
-      @Value("${brevo.local.from.address:${brevo.from.address:noreply@example.com}}")
+      @Value("${brevo.local.from.address:${brevo.from.address:${BREVO_FROM_ADDRESS:${SMTP_FROM_ADDRESS:noreply@example.com}}}}")
           final String fromAddress,
-      @Value("${brevo.local.from.name:${brevo.from.name:Notificaciones}}") final String fromName,
+      @Value("${brevo.local.from.name:${brevo.from.name:${BREVO_FROM_NAME:${SMTP_FROM_NAME:Notificaciones}}}}")
+          final String fromName,
       @Value("${brevo.timeout.connect:2s}") final Duration connectTimeout,
       @Value("${brevo.timeout.read:5s}") final Duration readTimeout,
       @Value("${brevo.retry.max-attempts:3}") final int retryMaxAttempts,

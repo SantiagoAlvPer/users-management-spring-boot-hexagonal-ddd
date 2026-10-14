@@ -19,6 +19,10 @@ services:
         sync: false
       - key: KAFKA_SASL_JAAS_CONFIG
         sync: false
+      - key: KAFKA_USERNAME
+        sync: false
+      - key: KAFKA_PASSWORD
+        sync: false
       - key: BREVO_API_KEY
         sync: false
       - key: BREVO_FROM_ADDRESS

@@ -41,6 +41,12 @@ public class KafkaConsumerConfig {
   @Value("${spring.kafka.properties.sasl.jaas.config:}")
   private String saslJaasConfig;
 
+  @Value("${spring.kafka.properties.sasl.username:${KAFKA_USERNAME:}}")
+  private String kafkaUsername;
+
+  @Value("${spring.kafka.properties.sasl.password:${KAFKA_PASSWORD:}}")
+  private String kafkaPassword;
+
   @Value("${spring.kafka.properties.ssl.truststore.type:}")
   private String sslTruststoreType;
 
@@ -76,8 +82,17 @@ public class KafkaConsumerConfig {
       if (saslMechanism != null && !saslMechanism.isBlank()) {
         props.put("sasl.mechanism", saslMechanism);
       }
-      if (saslJaasConfig != null && !saslJaasConfig.isBlank()) {
-        props.put("sasl.jaas.config", saslJaasConfig);
+      String effectiveJaasConfig = saslJaasConfig;
+      if ((effectiveJaasConfig == null || effectiveJaasConfig.isBlank())
+          && kafkaUsername != null
+          && !kafkaUsername.isBlank()) {
+        effectiveJaasConfig =
+            String.format(
+                "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"%s\" password=\"%s\";",
+                kafkaUsername, kafkaPassword);
+      }
+      if (effectiveJaasConfig != null && !effectiveJaasConfig.isBlank()) {
+        props.put("sasl.jaas.config", effectiveJaasConfig);
       }
       if (sslTruststoreLocation != null && !sslTruststoreLocation.isBlank()) {
         props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, sslTruststoreLocation);
