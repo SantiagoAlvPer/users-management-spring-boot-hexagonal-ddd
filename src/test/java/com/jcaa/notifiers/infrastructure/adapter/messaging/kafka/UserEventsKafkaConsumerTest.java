@@ -31,7 +31,7 @@ class UserEventsKafkaConsumerTest {
   }
 
   @Test
-  @DisplayName("procesa evento USER_CREATED y llama caso de uso con comando correspondiente")
+  @DisplayName("procesa evento USER_CREATED plano y llama caso de uso con comando correspondiente")
   void shouldProcessUserCreatedEvent() {
     final String json = """
         {
@@ -54,6 +54,66 @@ class UserEventsKafkaConsumerTest {
     assertEquals("maria@example.com", command.email());
     assertEquals("Password99!", command.password());
     assertEquals("ADMIN", command.role());
+  }
+
+  @Test
+  @DisplayName("procesa evento user.created anidado enviado por microservicio Users")
+  void shouldProcessNestedUserCreatedEvent() {
+    final String json = """
+        {
+          "eventName": "user.created",
+          "occurredOn": "2026-10-13T20:35:40",
+          "payload": {
+            "id": "u-123",
+            "name": "Maria Perez",
+            "email": "maria@example.com",
+            "role": "ADMIN",
+            "status": "ACTIVE"
+          }
+        }
+        """;
+
+    consumer.consume(json);
+
+    final ArgumentCaptor<UserCreatedNotificationCommand> captor =
+        ArgumentCaptor.forClass(UserCreatedNotificationCommand.class);
+    verify(sendNotificationUseCase).notifyUserCreated(captor.capture());
+
+    final UserCreatedNotificationCommand command = captor.getValue();
+    assertEquals("Maria Perez", command.name());
+    assertEquals("maria@example.com", command.email());
+    assertEquals("", command.password());
+    assertEquals("ADMIN", command.role());
+  }
+
+  @Test
+  @DisplayName("procesa evento user.updated anidado enviado por microservicio Users")
+  void shouldProcessNestedUserUpdatedEvent() {
+    final String json = """
+        {
+          "eventName": "user.updated",
+          "occurredOn": "2026-10-13T20:35:40",
+          "payload": {
+            "id": "u-123",
+            "name": "Carlos Gomez",
+            "email": "carlos@example.com",
+            "role": "MEMBER",
+            "status": "BLOCKED"
+          }
+        }
+        """;
+
+    consumer.consume(json);
+
+    final ArgumentCaptor<UserUpdatedNotificationCommand> captor =
+        ArgumentCaptor.forClass(UserUpdatedNotificationCommand.class);
+    verify(sendNotificationUseCase).notifyUserUpdated(captor.capture());
+
+    final UserUpdatedNotificationCommand command = captor.getValue();
+    assertEquals("Carlos Gomez", command.name());
+    assertEquals("carlos@example.com", command.email());
+    assertEquals("MEMBER", command.role());
+    assertEquals("BLOCKED", command.status());
   }
 
   @Test

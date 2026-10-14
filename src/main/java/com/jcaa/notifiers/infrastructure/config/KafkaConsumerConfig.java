@@ -50,6 +50,9 @@ public class KafkaConsumerConfig {
   @Value("${spring.kafka.properties.ssl.truststore.type:}")
   private String sslTruststoreType;
 
+  @Value("${spring.kafka.properties.ssl.truststore.certificates:${KAFKA_SSL_CA_PEM:${KAFKA_CA_CERT:}}}")
+  private String sslTruststoreCertificates;
+
   @Value("${spring.kafka.properties.ssl.truststore.location:}")
   private String sslTruststoreLocation;
 
@@ -94,7 +97,11 @@ public class KafkaConsumerConfig {
       if (effectiveJaasConfig != null && !effectiveJaasConfig.isBlank()) {
         props.put("sasl.jaas.config", effectiveJaasConfig);
       }
-      if (sslTruststoreLocation != null && !sslTruststoreLocation.isBlank()) {
+      if (sslTruststoreCertificates != null && !sslTruststoreCertificates.isBlank()) {
+        props.put("ssl.truststore.type", "PEM");
+        props.put("ssl.truststore.certificates", sslTruststoreCertificates);
+        log.info("[KafkaConsumerConfig] Certificado CA PEM de Aiven Kafka configurado.");
+      } else if (sslTruststoreLocation != null && !sslTruststoreLocation.isBlank()) {
         props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, sslTruststoreLocation);
         if (sslTruststorePassword != null && !sslTruststorePassword.isBlank()) {
           props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, sslTruststorePassword);

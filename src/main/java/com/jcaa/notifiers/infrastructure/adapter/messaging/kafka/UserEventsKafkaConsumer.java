@@ -20,7 +20,7 @@ public class UserEventsKafkaConsumer {
   private final ObjectMapper objectMapper;
 
   @KafkaListener(
-      topics = "${kafka.topic.user-notifications:user-notifications}",
+      topics = "#{'${kafka.topics:user.created,user.updated,user-notifications}'.split(',')}",
       groupId = "${spring.kafka.consumer.group-id:notifiers-group}")
   public void consume(final String message) {
     log.info("[UserEventsKafkaConsumer] Mensaje nuevo de email recibido desde Kafka: {}", message);
@@ -44,35 +44,37 @@ public class UserEventsKafkaConsumer {
   }
 
   void processEvent(final UserEventKafkaMessage event) {
-    if (event.getEmail() == null || event.getEmail().isBlank()) {
+    final String email = event.getEffectiveEmail();
+    if (email == null || email.isBlank()) {
       log.warn("[UserEventsKafkaConsumer] Se descartó evento de Kafka sin dirección de email.");
       return;
     }
 
-    final String eventType = event.getEventType() != null ? event.getEventType().toUpperCase() : "";
+    final String eventName = event.getEffectiveEventName().toLowerCase();
 
-    if ("USER_UPDATED".equals(eventType) || (event.getStatus() != null && event.getPassword() == null)) {
+    if (eventName.contains("updated") || "user_updated".equalsIgnoreCase(eventName)) {
       log.info(
           "[UserEventsKafkaConsumer] Procesando notificación de usuario actualizado para {}",
-          event.getEmail());
+          email);
       final UserUpdatedNotificationCommand command =
           new UserUpdatedNotificationCommand(
-              event.getName() != null ? event.getName() : "Usuario",
-              event.getEmail(),
-              event.getRole() != null ? event.getRole() : "MEMBER",
-              event.getStatus() != null ? event.getStatus() : "ACTIVE");
+              event.getEffectiveName(),
+              email,
+              event.getEffectiveRole(),
+              event.getEffectiveStatus());
       sendNotificationUseCase.notifyUserUpdated(command);
     } else {
-      // Por defecto tratamos como USER_CREATED si viene contraseña o eventType no es UPDATE
       log.info(
           "[UserEventsKafkaConsumer] Procesando notificación de usuario creado para {}",
-          event.getEmail());
+          email);
+      final String password =
+          event.getEffectivePassword() != null ? event.getEffectivePassword() : "";
       final UserCreatedNotificationCommand command =
           new UserCreatedNotificationCommand(
-              event.getName() != null ? event.getName() : "Usuario",
-              event.getEmail(),
-              event.getPassword() != null ? event.getPassword() : "",
-              event.getRole() != null ? event.getRole() : "MEMBER");
+              event.getEffectiveName(),
+              email,
+              password,
+              event.getEffectiveRole());
       sendNotificationUseCase.notifyUserCreated(command);
     }
   }

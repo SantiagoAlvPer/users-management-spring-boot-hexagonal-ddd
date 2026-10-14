@@ -38,13 +38,17 @@ public class EmailNotificationService implements SendNotificationUseCase {
   public void notifyUserCreated(final UserCreatedNotificationCommand command) {
     final String template = loadTemplate("user-created.html");
     final String role = command.role() != null ? command.role() : "MEMBER";
+    final String password =
+        (command.password() != null && !command.password().isBlank())
+            ? command.password()
+            : "Definida durante el registro";
     final String body =
         renderTemplate(
             template,
             Map.of(
                 TOKEN_NAME, command.name(),
                 TOKEN_EMAIL, command.email(),
-                TOKEN_PASSWORD, command.password() != null ? command.password() : "",
+                TOKEN_PASSWORD, password,
                 TOKEN_ROLE, role));
 
     final EmailDestinationModel destination =

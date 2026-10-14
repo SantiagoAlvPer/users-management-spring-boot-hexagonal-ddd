@@ -53,6 +53,22 @@ class EmailNotificationServiceTest {
   }
 
   @Test
+  @DisplayName("construye correo con texto por defecto cuando password es nulo o vacio")
+  void shouldSendUserCreatedNotificationWithFallbackPassword() {
+    final UserCreatedNotificationCommand command =
+        new UserCreatedNotificationCommand("Sebastian", "sebas@example.com", null, "ADMIN");
+
+    assertDoesNotThrow(() -> service.notifyUserCreated(command));
+
+    final ArgumentCaptor<EmailDestinationModel> captor =
+        ArgumentCaptor.forClass(EmailDestinationModel.class);
+    verify(emailSenderPort).send(captor.capture());
+
+    final EmailDestinationModel captured = captor.getValue();
+    assertTrue(captured.getBody().contains("Definida durante el registro"));
+  }
+
+  @Test
   @DisplayName("construye y envia correo de actualizacion de usuario con la plantilla renderizada")
   void shouldSendUserUpdatedNotification() {
     final UserUpdatedNotificationCommand command =
