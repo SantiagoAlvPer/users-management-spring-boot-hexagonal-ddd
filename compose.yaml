@@ -50,7 +50,7 @@ services:
       DB_PASSWORD: local_users_password
       DB_SSL_MODE: disable
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SMTP_HOST: smtp.gmail.com
+      SMTP_HOST: smtp-relay.brevo.com
       SMTP_PORT: "587"
       SMTP_USERNAME: ${SMTP_USERNAME:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
