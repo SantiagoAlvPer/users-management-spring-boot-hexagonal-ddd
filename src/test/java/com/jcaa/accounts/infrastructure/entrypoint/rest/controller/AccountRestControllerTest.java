@@ -21,7 +21,6 @@ import com.jcaa.accounts.domain.model.AccountModel;
 import com.jcaa.accounts.domain.valueobject.AccountId;
 import com.jcaa.accounts.domain.valueobject.AccountNumber;
 import com.jcaa.accounts.domain.valueobject.UserId;
-import com.jcaa.accounts.infrastructure.adapter.rest.users.exception.UsersServiceException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,7 +95,7 @@ class AccountRestControllerTest {
   }
 
   @Test
-  @DisplayName("POST /api/accounts devuelve 404 si el usuario no existe en Users")
+  @DisplayName("POST /api/accounts devuelve 404 si el usuario no existe")
   void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
     // Arrange
     when(createAccountUseCase.execute(any()))
@@ -109,23 +108,6 @@ class AccountRestControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"userId\":\"u-9\"}"))
         .andExpect(status().isNotFound());
-  }
-
-  @Test
-  @DisplayName("POST /api/accounts devuelve 502 si el servicio de Users falla")
-  void shouldReturnBadGatewayWhenUsersServiceFails() throws Exception {
-    // Arrange
-    when(createAccountUseCase.execute(any()))
-        .thenThrow(UsersServiceException.becauseRequestFailed("u-1", new RuntimeException("down")));
-
-    // Act & Assert
-    mockMvc
-        .perform(
-            post("/api/accounts")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"userId\":\"u-1\"}"))
-        .andExpect(status().isBadGateway())
-        .andExpect(jsonPath("$.status").value(502));
   }
 
   @Test

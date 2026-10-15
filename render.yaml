@@ -8,7 +8,7 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: aiven
-      # PostgreSQL de Render (copiar los datos "Internal" de la base)
+      # PostgreSQL de Render: la MISMA base que usa Users (accounts lee su tabla users)
       - key: DB_HOST
         sync: false
       - key: DB_PORT
@@ -21,13 +21,6 @@ services:
         sync: false
       - key: DB_SSL_MODE
         value: prefer
-      # Servicio de Users (GET /api/users/{id} para leer el correo)
-      - key: USERS_SERVICE_URL
-        sync: false
-      - key: USERS_SERVICE_EMAIL
-        sync: false
-      - key: USERS_SERVICE_PASSWORD
-        sync: false
       # Aiven Kafka
       - key: KAFKA_BOOTSTRAP_SERVERS
         sync: false

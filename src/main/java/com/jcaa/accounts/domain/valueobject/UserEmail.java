@@ -4,7 +4,7 @@ import com.jcaa.accounts.domain.exception.InvalidUserEmailException;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-/** Correo del dueno de la cuenta, obtenido del servicio de Users. No se persiste en accounts. */
+/** Correo del dueno de la cuenta, leido de la tabla de Users. No se persiste en accounts. */
 public record UserEmail(String value) {
 
   private static final Pattern FORMAT = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");

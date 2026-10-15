@@ -1,10 +1,10 @@
 # Accounts Service — Spring Boot, Hexagonal + DDD
 
-Microservicio de cuentas (wallet). Recibe la orden de crear la cuenta desde **Users**, consulta el correo del usuario en **Users** (`GET /api/users/{id}`), guarda la cuenta en **PostgreSQL** y publica el evento `account.created` (con el correo) en **Kafka (Aiven)**.
+Microservicio de cuentas (wallet). Recibe la orden de crear la cuenta desde **Users**, lee el correo del usuario de la tabla `users` (misma base PostgreSQL que Users), guarda la cuenta en **PostgreSQL** y publica el evento `account.created` (con el correo) en **Kafka (Aiven)**.
 
 ```
 Paso 5: Users  --POST /api/accounts (sync)-->  accounts
-        accounts --GET /api/users/{id} (sync)-->  Users   (lee el correo)
+        accounts --SELECT email FROM users (sync)--> PostgreSQL (tabla de Users)
 Paso 6: accounts --INSERT accounts (sync)-->   PostgreSQL
 Paso 7: accounts --account.created (async)-->  Kafka (Aiven)
 ```
@@ -20,8 +20,8 @@ application/
   service/                 Implementaciones de los casos de uso (+ dto command/query, mapper)
 infrastructure/
   adapter/persistence/     AccountRepositoryPostgres (JDBC puro, sin JPA)
+                           UserEmailRepositoryPostgres (solo lectura de la tabla users)
   adapter/messaging/       KafkaAccountEventPublisherAdapter (productor Kafka)
-  adapter/rest/users/      UsersRestClientAdapter (GET a Users, login JWT con cuenta de servicio)
   entrypoint/rest/         AccountRestController + GlobalExceptionHandler
   config/                  DataSourceSpringConfig (HikariCP)
 ```
@@ -32,7 +32,7 @@ Regla de dependencias: `domain <- application <- infrastructure`.
 
 | Método | Ruta | Descripción | Respuestas |
 |---|---|---|---|
-| `POST` | `/api/accounts` | Crea la cuenta de un usuario (lo llama Users) | 201, 400, 404, 409, 502 |
+| `POST` | `/api/accounts` | Crea la cuenta de un usuario (lo llama Users) | 201, 400, 404, 409 |
 | `GET` | `/api/accounts/{id}` | Cuenta por id | 200, 404 |
 | `GET` | `/api/accounts/user/{userId}` | Cuenta de un usuario | 200, 404 |
 | `GET` | `/actuator/health` | Health check (Render) | 200 |
@@ -56,7 +56,7 @@ Respuesta `201`:
 }
 ```
 
-Reglas: una cuenta por usuario (`409` si ya existe), saldo inicial `0.00`, estado `ACTIVE`, número de cuenta de 10 dígitos generado por el servicio. Antes de guardar se consulta el usuario en Users: `404` si Users no lo conoce, `502` si Users no responde o rechaza las credenciales. En ambos casos no se guarda nada.
+Reglas: una cuenta por usuario (`409` si ya existe), saldo inicial `0.00`, estado `ACTIVE`, número de cuenta de 10 dígitos generado por el servicio. Antes de guardar se lee el correo del usuario en la tabla `users`: si el usuario no existe responde `404` y no guarda nada.
 
 ## Contrato del evento (topic `account.created`)
 
@@ -86,17 +86,15 @@ La publicación es asíncrona: si Kafka falla, el error queda en el log y la cue
 | `DB_USERNAME` | Usuario | `postgres` |
 | `DB_PASSWORD` | Contraseña | `postgres` |
 | `DB_SSL_MODE` | `prefer` con el host interno de Render, `require` con el externo | `prefer` |
-| `USERS_SERVICE_URL` | URL base del servicio de Users (sin `/` final) | `http://localhost:8081` |
-| `USERS_SERVICE_EMAIL` / `USERS_SERVICE_PASSWORD` | Cuenta de servicio en Users con rol `ADMIN` o `REVIEWER` (se usa en `POST /api/auth/login`). Vacías = GET sin token | — |
-| `USERS_READ_TIMEOUT_MS` | Timeout de lectura hacia Users (Render free tarda en despertar) | `70000` |
+| `USERS_TABLE_NAME` | Tabla de usuarios de Users (columnas `id` y `email`) | `users` |
 | `KAFKA_BOOTSTRAP_SERVERS` | Brokers | `localhost:9092` |
 | `KAFKA_TOPIC_ACCOUNT_CREATED` | Topic | `account.created` |
 | `SPRING_PROFILES_ACTIVE` | `aiven` para conectarse a Aiven | — |
 | `KAFKA_USERNAME` / `KAFKA_PASSWORD` | Usuario SASL de Aiven (perfil `aiven`) | — |
 | `KAFKA_CA_CERT` | Contenido completo de `ca.pem` de Aiven (perfil `aiven`) | — |
 
-### Cuenta de servicio en Users
-`GET /api/users/{id}` en Users exige un JWT con rol `ADMIN` o `REVIEWER`. Creen en Users un usuario para accounts (por ejemplo `accounts-service@wallet.com`, rol `REVIEWER`, estado `ACTIVE`) y pongan su correo y contraseña en `USERS_SERVICE_EMAIL` / `USERS_SERVICE_PASSWORD`. Accounts hace login, guarda el token en memoria y lo renueva antes de que expire (o tras un `401`).
+### Base compartida con Users
+Accounts usa la **misma base PostgreSQL que Users**: las variables `DB_*` deben ser las mismas que tiene Users. Accounts crea y escribe solo su tabla `accounts`; de la tabla `users` únicamente lee `email` por `id` (sirve si `id` es `VARCHAR` o `UUID`).
 
 La tabla `accounts` se crea sola al arrancar (`schema.sql`, `CREATE TABLE IF NOT EXISTS`).
 

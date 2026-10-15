@@ -22,8 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
- * Paso 5-7 del flujo: Users pide crear la cuenta (sync), se consulta el correo del usuario en Users
- * (sync), se guarda en PostgreSQL (sync) y se publica {@code account.created} en Kafka (async).
+ * Paso 5-7 del flujo: Users pide crear la cuenta (sync), se lee el correo del usuario de la tabla
+ * de Users (sync), se guarda en PostgreSQL (sync) y se publica {@code account.created} (async).
  */
 @Slf4j
 @Service
@@ -45,7 +45,7 @@ public class CreateAccountService implements CreateAccountUseCase {
     final UserId userId = AccountApplicationMapper.fromCreateCommandToUserId(command);
     ensureUserHasNoAccount(userId);
     final AccountModel accountToSave = AccountApplicationMapper.fromCreateCommandToModel(command);
-    // Antes de guardar: si el usuario no existe o Users falla, no queda una cuenta huerfana
+    // Antes de guardar: si el usuario no existe, no queda una cuenta huerfana
     final UserEmail userEmail = findUserEmail(userId);
 
     final AccountModel savedAccount = saveAccountPort.save(accountToSave);

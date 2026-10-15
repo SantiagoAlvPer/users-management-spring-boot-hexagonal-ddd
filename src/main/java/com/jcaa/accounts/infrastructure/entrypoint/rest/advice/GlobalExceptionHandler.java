@@ -5,7 +5,6 @@ import com.jcaa.accounts.domain.exception.AccountNotFoundException;
 import com.jcaa.accounts.domain.exception.DomainException;
 import com.jcaa.accounts.domain.exception.UserNotFoundException;
 import com.jcaa.accounts.infrastructure.adapter.persistence.exception.PersistenceException;
-import com.jcaa.accounts.infrastructure.adapter.rest.users.exception.UsersServiceException;
 import com.jcaa.accounts.infrastructure.entrypoint.rest.dto.response.ApiErrorResponse;
 import jakarta.validation.ConstraintViolationException;
 import java.util.stream.Collectors;
@@ -26,10 +25,6 @@ public class GlobalExceptionHandler {
   private static final String MESSAGE_INTERNAL = "Error interno del servidor.";
   private static final String MESSAGE_UNREADABLE = "El cuerpo de la peticion no es un JSON valido.";
   private static final String MESSAGE_NOT_FOUND = "Recurso no encontrado.";
-  private static final String MESSAGE_USERS_SERVICE =
-      "No se pudo consultar el servicio de usuarios.";
-  private static final String LOG_USERS_SERVICE =
-      "[GlobalExceptionHandler] error consultando el servicio de usuarios";
   private static final String LOG_PERSISTENCE = "[GlobalExceptionHandler] error de persistencia";
   private static final String LOG_UNEXPECTED = "[GlobalExceptionHandler] error inesperado";
 
@@ -43,13 +38,6 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.NOT_FOUND)
   public ApiErrorResponse handleUserNotFound(final UserNotFoundException exception) {
     return new ApiErrorResponse(HttpStatus.NOT_FOUND.value(), exception.getMessage());
-  }
-
-  @ExceptionHandler(UsersServiceException.class)
-  @ResponseStatus(HttpStatus.BAD_GATEWAY)
-  public ApiErrorResponse handleUsersService(final UsersServiceException exception) {
-    log.error(LOG_USERS_SERVICE, exception);
-    return new ApiErrorResponse(HttpStatus.BAD_GATEWAY.value(), MESSAGE_USERS_SERVICE);
   }
 
   @ExceptionHandler(AccountAlreadyExistsException.class)
