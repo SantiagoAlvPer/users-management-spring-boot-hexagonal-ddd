@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.jcaa.usersmanagement.application.port.out.CreateAccountPort;
 import com.jcaa.usersmanagement.application.port.out.GetUserByEmailPort;
 import com.jcaa.usersmanagement.application.port.out.PublishUserEventPort;
 import com.jcaa.usersmanagement.application.port.out.SaveUserPort;
@@ -42,6 +43,7 @@ class CreateUserServiceTest {
   @Mock private SaveUserPort saveUserPort;
   @Mock private GetUserByEmailPort getUserByEmailPort;
   @Mock private PublishUserEventPort publishUserEventPort;
+  @Mock private CreateAccountPort createAccountPort;
 
   private CreateUserService service;
 
@@ -53,6 +55,7 @@ class CreateUserServiceTest {
               saveUserPort,
               getUserByEmailPort,
               publishUserEventPort,
+              createAccountPort,
               validatorFactory.getValidator());
     }
   }

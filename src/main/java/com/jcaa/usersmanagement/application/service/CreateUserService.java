@@ -1,6 +1,7 @@
 package com.jcaa.usersmanagement.application.service;
 
 import com.jcaa.usersmanagement.application.port.in.CreateUserUseCase;
+import com.jcaa.usersmanagement.application.port.out.CreateAccountPort;
 import com.jcaa.usersmanagement.application.port.out.GetUserByEmailPort;
 import com.jcaa.usersmanagement.application.port.out.PublishUserEventPort;
 import com.jcaa.usersmanagement.application.port.out.SaveUserPort;
@@ -27,6 +28,7 @@ public class CreateUserService implements CreateUserUseCase {
   private final SaveUserPort saveUserPort;
   private final GetUserByEmailPort getUserByEmailPort;
   private final PublishUserEventPort publishUserEventPort;
+  private final CreateAccountPort createAccountPort;
   private final Validator validator;
 
   @Override
@@ -40,6 +42,7 @@ public class CreateUserService implements CreateUserUseCase {
     final UserModel savedUser = saveUserPort.save(userToSave);
 
     publishUserEventPort.publish(new UserCreatedDomainEvent(savedUser));
+    createAccountPort.createAccountFor(savedUser);
 
     return savedUser;
   }
