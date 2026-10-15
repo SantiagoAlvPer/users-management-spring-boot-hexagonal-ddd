@@ -1,9 +1,10 @@
 # Accounts Service — Spring Boot, Hexagonal + DDD
 
-Microservicio de cuentas (wallet). Recibe la orden de crear la cuenta desde **Users**, la guarda en **PostgreSQL** y publica el evento `account.created` en **Kafka (Aiven)**.
+Microservicio de cuentas (wallet). Recibe la orden de crear la cuenta desde **Users**, consulta el correo del usuario en **Users** (`GET /api/users/{id}`), guarda la cuenta en **PostgreSQL** y publica el evento `account.created` (con el correo) en **Kafka (Aiven)**.
 
 ```
 Paso 5: Users  --POST /api/accounts (sync)-->  accounts
+        accounts --GET /api/users/{id} (sync)-->  Users   (lee el correo)
 Paso 6: accounts --INSERT accounts (sync)-->   PostgreSQL
 Paso 7: accounts --account.created (async)-->  Kafka (Aiven)
 ```
@@ -15,11 +16,12 @@ domain/                    Java puro: AccountModel, value objects, enums, evento
 application/
   port/in/                 CreateAccountUseCase, GetAccountByIdUseCase, GetAccountByUserIdUseCase
   port/out/                SaveAccountPort, GetAccountByIdPort, GetAccountByUserIdPort,
-                           PublishAccountCreatedEventPort
+                           GetUserEmailPort, PublishAccountCreatedEventPort
   service/                 Implementaciones de los casos de uso (+ dto command/query, mapper)
 infrastructure/
   adapter/persistence/     AccountRepositoryPostgres (JDBC puro, sin JPA)
   adapter/messaging/       KafkaAccountEventPublisherAdapter (productor Kafka)
+  adapter/rest/users/      UsersRestClientAdapter (GET a Users, login JWT con cuenta de servicio)
   entrypoint/rest/         AccountRestController + GlobalExceptionHandler
   config/                  DataSourceSpringConfig (HikariCP)
 ```
@@ -30,7 +32,7 @@ Regla de dependencias: `domain <- application <- infrastructure`.
 
 | Método | Ruta | Descripción | Respuestas |
 |---|---|---|---|
-| `POST` | `/api/accounts` | Crea la cuenta de un usuario (lo llama Users) | 201, 400, 409 |
+| `POST` | `/api/accounts` | Crea la cuenta de un usuario (lo llama Users) | 201, 400, 404, 409, 502 |
 | `GET` | `/api/accounts/{id}` | Cuenta por id | 200, 404 |
 | `GET` | `/api/accounts/user/{userId}` | Cuenta de un usuario | 200, 404 |
 | `GET` | `/actuator/health` | Health check (Render) | 200 |
@@ -54,7 +56,7 @@ Respuesta `201`:
 }
 ```
 
-Reglas: una cuenta por usuario (`409` si ya existe), saldo inicial `0.00`, estado `ACTIVE`, número de cuenta de 10 dígitos generado por el servicio.
+Reglas: una cuenta por usuario (`409` si ya existe), saldo inicial `0.00`, estado `ACTIVE`, número de cuenta de 10 dígitos generado por el servicio. Antes de guardar se consulta el usuario en Users: `404` si Users no lo conoce, `502` si Users no responde o rechaza las credenciales. En ambos casos no se guarda nada.
 
 ## Contrato del evento (topic `account.created`)
 
@@ -65,7 +67,8 @@ Key = `id` de la cuenta. Valor JSON (String), mismo formato que `user.created`:
   "eventName": "account.created",
   "occurredOn": "2026-01-01T10:00:00",
   "payload": {
-    "id": "2b0b8a59-...", "userId": "8f684dc4-...", "accountNumber": "4821937750",
+    "id": "2b0b8a59-...", "userId": "8f684dc4-...", "email": "john@example.com",
+    "accountNumber": "4821937750",
     "balance": "0.00", "currency": "COP", "status": "ACTIVE"
   }
 }
@@ -83,11 +86,17 @@ La publicación es asíncrona: si Kafka falla, el error queda en el log y la cue
 | `DB_USERNAME` | Usuario | `postgres` |
 | `DB_PASSWORD` | Contraseña | `postgres` |
 | `DB_SSL_MODE` | `prefer` con el host interno de Render, `require` con el externo | `prefer` |
+| `USERS_SERVICE_URL` | URL base del servicio de Users (sin `/` final) | `http://localhost:8081` |
+| `USERS_SERVICE_EMAIL` / `USERS_SERVICE_PASSWORD` | Cuenta de servicio en Users con rol `ADMIN` o `REVIEWER` (se usa en `POST /api/auth/login`). Vacías = GET sin token | — |
+| `USERS_READ_TIMEOUT_MS` | Timeout de lectura hacia Users (Render free tarda en despertar) | `70000` |
 | `KAFKA_BOOTSTRAP_SERVERS` | Brokers | `localhost:9092` |
 | `KAFKA_TOPIC_ACCOUNT_CREATED` | Topic | `account.created` |
 | `SPRING_PROFILES_ACTIVE` | `aiven` para conectarse a Aiven | — |
 | `KAFKA_USERNAME` / `KAFKA_PASSWORD` | Usuario SASL de Aiven (perfil `aiven`) | — |
 | `KAFKA_CA_CERT` | Contenido completo de `ca.pem` de Aiven (perfil `aiven`) | — |
+
+### Cuenta de servicio en Users
+`GET /api/users/{id}` en Users exige un JWT con rol `ADMIN` o `REVIEWER`. Creen en Users un usuario para accounts (por ejemplo `accounts-service@wallet.com`, rol `REVIEWER`, estado `ACTIVE`) y pongan su correo y contraseña en `USERS_SERVICE_EMAIL` / `USERS_SERVICE_PASSWORD`. Accounts hace login, guarda el token en memoria y lo renueva antes de que expire (o tras un `401`).
 
 La tabla `accounts` se crea sola al arrancar (`schema.sql`, `CREATE TABLE IF NOT EXISTS`).
 

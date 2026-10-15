@@ -15,6 +15,7 @@ import com.jcaa.accounts.domain.event.AccountCreatedDomainEvent;
 import com.jcaa.accounts.domain.model.AccountModel;
 import com.jcaa.accounts.domain.valueobject.AccountId;
 import com.jcaa.accounts.domain.valueobject.AccountNumber;
+import com.jcaa.accounts.domain.valueobject.UserEmail;
 import com.jcaa.accounts.domain.valueobject.UserId;
 import java.util.concurrent.CompletableFuture;
 import org.apache.kafka.common.KafkaException;
@@ -49,7 +50,8 @@ class KafkaAccountEventPublisherAdapterTest {
                 new AccountId("a-1"),
                 new UserId("u-1"),
                 new AccountNumber("1234567890"),
-                AccountCurrency.COP));
+                AccountCurrency.COP),
+            new UserEmail("john@example.com"));
   }
 
   @Test
@@ -69,6 +71,7 @@ class KafkaAccountEventPublisherAdapterTest {
     assertAll(
         () -> assertEquals("account.created", json.get("eventName").asText()),
         () -> assertEquals("u-1", json.get("payload").get("userId").asText()),
+        () -> assertEquals("john@example.com", json.get("payload").get("email").asText()),
         () -> assertEquals("1234567890", json.get("payload").get("accountNumber").asText()),
         () -> assertEquals("0.00", json.get("payload").get("balance").asText()));
   }

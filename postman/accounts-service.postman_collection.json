@@ -10,7 +10,7 @@
     },
     {
       "key": "userId",
-      "value": "u-postman-1"
+      "value": "PEGA_AQUI_EL_ID_DE_UN_USUARIO_DE_USERS"
     },
     {
       "key": "accountId",
@@ -170,6 +170,48 @@
             "type": "text/javascript",
             "exec": [
               "pm.test('400', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Crear cuenta de usuario inexistente (404)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/accounts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "accounts"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"no-existe-en-users\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('404', () => pm.response.to.have.status(404));"
             ]
           }
         }
