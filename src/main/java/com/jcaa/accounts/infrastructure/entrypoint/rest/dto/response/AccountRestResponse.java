@@ -6,6 +6,7 @@ public record AccountRestResponse(
     String id,
     String userId,
     String email,
+    String name,
     String accountNumber,
     BigDecimal balance,
     String currency,

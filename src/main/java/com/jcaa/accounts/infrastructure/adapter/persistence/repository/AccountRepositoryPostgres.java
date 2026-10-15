@@ -33,10 +33,10 @@ public class AccountRepositoryPostgres
           + "(id, user_id, account_number, balance, currency, status, created_at, updated_at) "
           + "VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
 
-  // LEFT JOIN: la cuenta se devuelve aunque el usuario ya no exista (owner_email = null)
+  // LEFT JOIN: la cuenta se devuelve aunque el usuario ya no exista (owner_* = null)
   private static final String SQL_SELECT_TEMPLATE =
       "SELECT a.id, a.user_id, a.account_number, a.balance, a.currency, a.status, "
-          + "u.email AS owner_email "
+          + "u.email AS owner_email, u.name AS owner_name "
           + "FROM accounts a LEFT JOIN %s u ON u.id::text = a.user_id "
           + "WHERE a.%s = ? LIMIT 1";
 

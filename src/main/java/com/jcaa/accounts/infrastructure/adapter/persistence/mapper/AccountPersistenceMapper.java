@@ -3,11 +3,13 @@ package com.jcaa.accounts.infrastructure.adapter.persistence.mapper;
 import com.jcaa.accounts.domain.enums.AccountCurrency;
 import com.jcaa.accounts.domain.enums.AccountStatus;
 import com.jcaa.accounts.domain.model.AccountModel;
+import com.jcaa.accounts.domain.model.AccountOwner;
 import com.jcaa.accounts.domain.valueobject.AccountBalance;
 import com.jcaa.accounts.domain.valueobject.AccountId;
 import com.jcaa.accounts.domain.valueobject.AccountNumber;
 import com.jcaa.accounts.domain.valueobject.UserEmail;
 import com.jcaa.accounts.domain.valueobject.UserId;
+import com.jcaa.accounts.domain.valueobject.UserName;
 import com.jcaa.accounts.infrastructure.adapter.persistence.dto.AccountPersistenceDto;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,6 +26,7 @@ public class AccountPersistenceMapper {
   private static final String COL_CURRENCY = "currency";
   private static final String COL_STATUS = "status";
   private static final String COL_OWNER_EMAIL = "owner_email";
+  private static final String COL_OWNER_NAME = "owner_name";
 
   public AccountPersistenceDto fromModelToDto(final AccountModel account) {
     return new AccountPersistenceDto(
@@ -43,10 +46,14 @@ public class AccountPersistenceMapper {
         new AccountBalance(resultSet.getBigDecimal(COL_BALANCE)),
         AccountCurrency.fromString(resultSet.getString(COL_CURRENCY)),
         AccountStatus.fromString(resultSet.getString(COL_STATUS)),
-        toOwnerEmail(resultSet.getString(COL_OWNER_EMAIL)));
+        toOwner(resultSet.getString(COL_OWNER_EMAIL), resultSet.getString(COL_OWNER_NAME)));
   }
 
-  private UserEmail toOwnerEmail(final String email) {
-    return Objects.isNull(email) ? null : new UserEmail(email);
+  /** Null cuando el usuario ya no existe en la tabla de Users (LEFT JOIN sin coincidencia). */
+  private AccountOwner toOwner(final String email, final String name) {
+    if (Objects.isNull(email)) {
+      return null;
+    }
+    return new AccountOwner(new UserEmail(email), new UserName(name));
   }
 }

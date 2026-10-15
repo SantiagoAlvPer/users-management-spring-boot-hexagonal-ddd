@@ -2,7 +2,7 @@ package com.jcaa.accounts.application.service;
 
 import com.jcaa.accounts.application.port.in.CreateAccountUseCase;
 import com.jcaa.accounts.application.port.out.GetAccountByUserIdPort;
-import com.jcaa.accounts.application.port.out.GetUserEmailPort;
+import com.jcaa.accounts.application.port.out.GetAccountOwnerPort;
 import com.jcaa.accounts.application.port.out.PublishAccountCreatedEventPort;
 import com.jcaa.accounts.application.port.out.SaveAccountPort;
 import com.jcaa.accounts.application.service.dto.command.CreateAccountCommand;
@@ -11,7 +11,7 @@ import com.jcaa.accounts.domain.event.AccountCreatedDomainEvent;
 import com.jcaa.accounts.domain.exception.AccountAlreadyExistsException;
 import com.jcaa.accounts.domain.exception.UserNotFoundException;
 import com.jcaa.accounts.domain.model.AccountModel;
-import com.jcaa.accounts.domain.valueobject.UserEmail;
+import com.jcaa.accounts.domain.model.AccountOwner;
 import com.jcaa.accounts.domain.valueobject.UserId;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -22,8 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
- * Paso 5-7 del flujo: Users pide crear la cuenta (sync), se lee el correo del usuario de la tabla
- * de Users (sync), se guarda en PostgreSQL (sync) y se publica {@code account.created} (async).
+ * Paso 5-7 del flujo: Users pide crear la cuenta (sync), se leen correo y nombre del usuario de la
+ * tabla de Users (sync), se guarda en PostgreSQL (sync) y se publica {@code account.created} (async).
  */
 @Slf4j
 @Service
@@ -34,7 +34,7 @@ public class CreateAccountService implements CreateAccountUseCase {
 
   private final SaveAccountPort saveAccountPort;
   private final GetAccountByUserIdPort getAccountByUserIdPort;
-  private final GetUserEmailPort getUserEmailPort;
+  private final GetAccountOwnerPort getAccountOwnerPort;
   private final PublishAccountCreatedEventPort publishAccountCreatedEventPort;
   private final Validator validator;
 
@@ -46,12 +46,12 @@ public class CreateAccountService implements CreateAccountUseCase {
     ensureUserHasNoAccount(userId);
     final AccountModel accountToSave = AccountApplicationMapper.fromCreateCommandToModel(command);
     // Antes de guardar: si el usuario no existe, no queda una cuenta huerfana
-    final UserEmail userEmail = findUserEmail(userId);
+    final AccountOwner owner = findOwner(userId);
 
-    final AccountModel savedAccount = saveAccountPort.save(accountToSave.withOwnerEmail(userEmail));
+    final AccountModel savedAccount = saveAccountPort.save(accountToSave.withOwner(owner));
     log.info(LOG_CREATED, savedAccount.getId().value());
 
-    publishAccountCreatedEventPort.publish(new AccountCreatedDomainEvent(savedAccount, userEmail));
+    publishAccountCreatedEventPort.publish(new AccountCreatedDomainEvent(savedAccount, owner));
     return savedAccount;
   }
 
@@ -62,9 +62,9 @@ public class CreateAccountService implements CreateAccountUseCase {
     }
   }
 
-  private UserEmail findUserEmail(final UserId userId) {
-    return getUserEmailPort
-        .getEmailByUserId(userId)
+  private AccountOwner findOwner(final UserId userId) {
+    return getAccountOwnerPort
+        .getOwnerByUserId(userId)
         .orElseThrow(() -> UserNotFoundException.becauseIdWasNotFound(userId.value()));
   }
 

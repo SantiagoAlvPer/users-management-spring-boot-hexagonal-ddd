@@ -13,10 +13,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jcaa.accounts.domain.enums.AccountCurrency;
 import com.jcaa.accounts.domain.event.AccountCreatedDomainEvent;
 import com.jcaa.accounts.domain.model.AccountModel;
+import com.jcaa.accounts.domain.model.AccountOwner;
 import com.jcaa.accounts.domain.valueobject.AccountId;
 import com.jcaa.accounts.domain.valueobject.AccountNumber;
 import com.jcaa.accounts.domain.valueobject.UserEmail;
 import com.jcaa.accounts.domain.valueobject.UserId;
+import com.jcaa.accounts.domain.valueobject.UserName;
 import java.util.concurrent.CompletableFuture;
 import org.apache.kafka.common.KafkaException;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,7 +53,7 @@ class KafkaAccountEventPublisherAdapterTest {
                 new UserId("u-1"),
                 new AccountNumber("1234567890"),
                 AccountCurrency.COP),
-            new UserEmail("john@example.com"));
+            new AccountOwner(new UserEmail("john@example.com"), new UserName("John Arrieta")));
   }
 
   @Test
@@ -72,6 +74,7 @@ class KafkaAccountEventPublisherAdapterTest {
         () -> assertEquals("account.created", json.get("eventName").asText()),
         () -> assertEquals("u-1", json.get("payload").get("userId").asText()),
         () -> assertEquals("john@example.com", json.get("payload").get("email").asText()),
+        () -> assertEquals("John Arrieta", json.get("payload").get("name").asText()),
         () -> assertEquals("1234567890", json.get("payload").get("accountNumber").asText()),
         () -> assertEquals("0.00", json.get("payload").get("balance").asText()));
   }

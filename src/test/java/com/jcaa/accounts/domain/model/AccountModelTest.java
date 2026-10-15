@@ -9,6 +9,7 @@ import com.jcaa.accounts.domain.valueobject.AccountBalance;
 import com.jcaa.accounts.domain.valueobject.AccountId;
 import com.jcaa.accounts.domain.valueobject.AccountNumber;
 import com.jcaa.accounts.domain.valueobject.UserEmail;
+import com.jcaa.accounts.domain.valueobject.UserName;
 import com.jcaa.accounts.domain.valueobject.UserId;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -35,12 +36,12 @@ class AccountModelTest {
         () -> assertEquals(AccountBalance.zero(), account.getBalance()),
         () -> assertEquals(AccountCurrency.COP, account.getCurrency()),
         () -> assertEquals(AccountStatus.ACTIVE, account.getStatus()),
-        () -> assertEquals(Optional.empty(), account.ownerEmail()));
+        () -> assertEquals(Optional.empty(), account.owner()));
   }
 
   @Test
-  @DisplayName("withOwnerEmail() devuelve una copia con el correo del dueno")
-  void shouldAttachOwnerEmail() {
+  @DisplayName("withOwner() devuelve una copia con correo y nombre del dueno")
+  void shouldAttachOwner() {
     // Arrange
     final AccountModel account =
         AccountModel.open(
@@ -48,14 +49,15 @@ class AccountModelTest {
             new UserId("u-1"),
             new AccountNumber("1234567890"),
             AccountCurrency.COP);
-    final UserEmail email = new UserEmail("john@example.com");
+    final AccountOwner owner =
+        new AccountOwner(new UserEmail("john@example.com"), new UserName("John Arrieta"));
 
     // Act
-    final AccountModel withEmail = account.withOwnerEmail(email);
+    final AccountModel withOwner = account.withOwner(owner);
 
     // Assert
     assertAll(
-        () -> assertEquals(Optional.of(email), withEmail.ownerEmail()),
-        () -> assertEquals(Optional.empty(), account.ownerEmail()));
+        () -> assertEquals(Optional.of(owner), withOwner.owner()),
+        () -> assertEquals(Optional.empty(), account.owner()));
   }
 }

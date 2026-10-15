@@ -23,10 +23,12 @@ import com.jcaa.accounts.domain.exception.AccountAlreadyExistsException;
 import com.jcaa.accounts.domain.exception.AccountNotFoundException;
 import com.jcaa.accounts.domain.exception.UserNotFoundException;
 import com.jcaa.accounts.domain.model.AccountModel;
+import com.jcaa.accounts.domain.model.AccountOwner;
 import com.jcaa.accounts.domain.valueobject.AccountId;
 import com.jcaa.accounts.domain.valueobject.AccountNumber;
 import com.jcaa.accounts.domain.valueobject.UserEmail;
 import com.jcaa.accounts.domain.valueobject.UserId;
+import com.jcaa.accounts.domain.valueobject.UserName;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +60,9 @@ class AccountRestControllerTest {
   void shouldCreateAccount() throws Exception {
     // Arrange
     when(createAccountUseCase.execute(any()))
-        .thenReturn(ACCOUNT.withOwnerEmail(new UserEmail("john@example.com")));
+        .thenReturn(
+            ACCOUNT.withOwner(
+                new AccountOwner(new UserEmail("john@example.com"), new UserName("John Arrieta"))));
 
     // Act & Assert
     mockMvc
@@ -70,6 +74,7 @@ class AccountRestControllerTest {
         .andExpect(jsonPath("$.id").value("a-1"))
         .andExpect(jsonPath("$.userId").value("u-1"))
         .andExpect(jsonPath("$.email").value("john@example.com"))
+        .andExpect(jsonPath("$.name").value("John Arrieta"))
         .andExpect(jsonPath("$.accountNumber").value("1234567890"))
         .andExpect(jsonPath("$.balance").value(0.0))
         .andExpect(jsonPath("$.currency").value("COP"))

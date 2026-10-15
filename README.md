@@ -1,10 +1,10 @@
 # Accounts Service — Spring Boot, Hexagonal + DDD
 
-Microservicio de cuentas (wallet). Recibe la orden de crear la cuenta desde **Users**, lee el correo del usuario de la tabla `users` (misma base PostgreSQL que Users), guarda la cuenta en **PostgreSQL** y publica el evento `account.created` (con el correo) en **Kafka (Aiven)**.
+Microservicio de cuentas (wallet). Recibe la orden de crear la cuenta desde **Users**, lee correo y nombre del usuario de la tabla `users` (misma base PostgreSQL que Users), guarda la cuenta en **PostgreSQL** y publica el evento `account.created` (con correo y nombre) en **Kafka (Aiven)**.
 
 ```
 Paso 5: Users  --POST /api/accounts (sync)-->  accounts
-        accounts --SELECT email FROM users (sync)--> PostgreSQL (tabla de Users)
+        accounts --SELECT email, name FROM users (sync)--> PostgreSQL (tabla de Users)
 Paso 6: accounts --INSERT accounts (sync)-->   PostgreSQL
 Paso 7: accounts --account.created (async)-->  Kafka (Aiven)
 ```
@@ -17,11 +17,11 @@ application/
   port/in/                 CreateAccountUseCase, GetAccountByIdUseCase, GetAccountByUserIdUseCase,
                            DeleteAccountUseCase
   port/out/                SaveAccountPort, GetAccountByIdPort, GetAccountByUserIdPort, DeleteAccountPort,
-                           GetUserEmailPort, PublishAccountCreatedEventPort
+                           GetAccountOwnerPort, PublishAccountCreatedEventPort
   service/                 Implementaciones de los casos de uso (+ dto command/query, mapper)
 infrastructure/
   adapter/persistence/     AccountRepositoryPostgres (JDBC puro, sin JPA)
-                           UserEmailRepositoryPostgres (solo lectura de la tabla users)
+                           AccountOwnerRepositoryPostgres (solo lectura de la tabla users)
   adapter/messaging/       KafkaAccountEventPublisherAdapter (productor Kafka)
   entrypoint/rest/         AccountRestController + GlobalExceptionHandler
   config/                  DataSourceSpringConfig (HikariCP)
@@ -52,6 +52,7 @@ Respuesta `201`:
   "id": "2b0b8a59-6a43-4d0e-9a59-1f0f2d1c4c11",
   "userId": "8f684dc4-0c67-4813-8d58-7b5e7f7937b8",
   "email": "john@example.com",
+  "name": "John Arrieta",
   "accountNumber": "4821937750",
   "balance": 0.00,
   "currency": "COP",
@@ -59,7 +60,7 @@ Respuesta `201`:
 }
 ```
 
-Reglas: una cuenta por usuario (`409` si ya existe), saldo inicial `0.00`, estado `ACTIVE`, número de cuenta de 10 dígitos generado por el servicio. Antes de guardar se lee el correo del usuario en la tabla `users`: si el usuario no existe responde `404` y no guarda nada.
+Reglas: una cuenta por usuario (`409` si ya existe), saldo inicial `0.00`, estado `ACTIVE`, número de cuenta de 10 dígitos generado por el servicio. Antes de guardar se leen correo y nombre del usuario en la tabla `users`: si el usuario no existe responde `404` y no guarda nada.
 
 ## Contrato del evento (topic `account.created`)
 
@@ -70,7 +71,7 @@ Key = `id` de la cuenta. Valor JSON (String), mismo formato que `user.created`:
   "eventName": "account.created",
   "occurredOn": "2026-01-01T10:00:00",
   "payload": {
-    "id": "2b0b8a59-...", "userId": "8f684dc4-...", "email": "john@example.com",
+    "id": "2b0b8a59-...", "userId": "8f684dc4-...", "email": "john@example.com", "name": "John Arrieta",
     "accountNumber": "4821937750",
     "balance": "0.00", "currency": "COP", "status": "ACTIVE"
   }
@@ -89,7 +90,7 @@ La publicación es asíncrona: si Kafka falla, el error queda en el log y la cue
 | `DB_USERNAME` | Usuario | `postgres` |
 | `DB_PASSWORD` | Contraseña | `postgres` |
 | `DB_SSL_MODE` | `prefer` con el host interno de Render, `require` con el externo | `prefer` |
-| `USERS_TABLE_NAME` | Tabla de usuarios de Users (columnas `id` y `email`) | `users` |
+| `USERS_TABLE_NAME` | Tabla de usuarios de Users (columnas `id`, `email` y `name`) | `users` |
 | `KAFKA_BOOTSTRAP_SERVERS` | Brokers | `localhost:9092` |
 | `KAFKA_TOPIC_ACCOUNT_CREATED` | Topic | `account.created` |
 | `SPRING_PROFILES_ACTIVE` | `aiven` para conectarse a Aiven | — |
@@ -97,7 +98,7 @@ La publicación es asíncrona: si Kafka falla, el error queda en el log y la cue
 | `KAFKA_CA_CERT` | Contenido completo de `ca.pem` de Aiven (perfil `aiven`) | — |
 
 ### Base compartida con Users
-Accounts usa la **misma base PostgreSQL que Users**: las variables `DB_*` deben ser las mismas que tiene Users. Accounts crea y escribe solo su tabla `accounts`; de la tabla `users` únicamente lee `email` por `id` (sirve si `id` es `VARCHAR` o `UUID`). Las respuestas de la API incluyen ese `email` (vía `LEFT JOIN`); si el usuario ya no existe, `email` sale `null`.
+Accounts usa la **misma base PostgreSQL que Users**: las variables `DB_*` deben ser las mismas que tiene Users. Accounts crea y escribe solo su tabla `accounts`; de la tabla `users` únicamente lee `email` y `name` por `id` (sirve si `id` es `VARCHAR` o `UUID`). Las respuestas de la API incluyen `email` y `name` (vía `LEFT JOIN`); si el usuario ya no existe, salen `null`.
 
 La tabla `accounts` se crea sola al arrancar (`schema.sql`, `CREATE TABLE IF NOT EXISTS`).
 

@@ -5,7 +5,6 @@ import com.jcaa.accounts.domain.enums.AccountStatus;
 import com.jcaa.accounts.domain.valueobject.AccountBalance;
 import com.jcaa.accounts.domain.valueobject.AccountId;
 import com.jcaa.accounts.domain.valueobject.AccountNumber;
-import com.jcaa.accounts.domain.valueobject.UserEmail;
 import com.jcaa.accounts.domain.valueobject.UserId;
 import java.util.Optional;
 import lombok.AccessLevel;
@@ -22,9 +21,9 @@ public class AccountModel {
   AccountCurrency currency;
   AccountStatus status;
 
-  /** Correo del dueno, leido de la tabla de Users. No se guarda en accounts; puede faltar. */
+  /** Correo y nombre del dueno, leidos de la tabla de Users. No se guardan; pueden faltar. */
   @Getter(AccessLevel.NONE)
-  UserEmail ownerEmail;
+  AccountOwner owner;
 
   public AccountModel(
       final AccountId id,
@@ -33,14 +32,14 @@ public class AccountModel {
       final AccountBalance balance,
       final AccountCurrency currency,
       final AccountStatus status,
-      final UserEmail ownerEmail) {
+      final AccountOwner owner) {
     this.id = id;
     this.userId = userId;
     this.accountNumber = accountNumber;
     this.balance = balance;
     this.currency = currency;
     this.status = status;
-    this.ownerEmail = ownerEmail;
+    this.owner = owner;
   }
 
   /** Abre una cuenta nueva: saldo en cero y estado ACTIVE. */
@@ -53,11 +52,11 @@ public class AccountModel {
         id, userId, accountNumber, AccountBalance.zero(), currency, AccountStatus.ACTIVE, null);
   }
 
-  public Optional<UserEmail> ownerEmail() {
-    return Optional.ofNullable(ownerEmail);
+  public Optional<AccountOwner> owner() {
+    return Optional.ofNullable(owner);
   }
 
-  public AccountModel withOwnerEmail(final UserEmail email) {
-    return new AccountModel(id, userId, accountNumber, balance, currency, status, email);
+  public AccountModel withOwner(final AccountOwner newOwner) {
+    return new AccountModel(id, userId, accountNumber, balance, currency, status, newOwner);
   }
 }

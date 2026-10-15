@@ -11,7 +11,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.jcaa.accounts.application.port.out.GetAccountByUserIdPort;
-import com.jcaa.accounts.application.port.out.GetUserEmailPort;
+import com.jcaa.accounts.application.port.out.GetAccountOwnerPort;
 import com.jcaa.accounts.application.port.out.PublishAccountCreatedEventPort;
 import com.jcaa.accounts.application.port.out.SaveAccountPort;
 import com.jcaa.accounts.application.service.dto.command.CreateAccountCommand;
@@ -22,10 +22,12 @@ import com.jcaa.accounts.domain.exception.AccountAlreadyExistsException;
 import com.jcaa.accounts.domain.exception.InvalidAccountCurrencyException;
 import com.jcaa.accounts.domain.exception.UserNotFoundException;
 import com.jcaa.accounts.domain.model.AccountModel;
+import com.jcaa.accounts.domain.model.AccountOwner;
 import com.jcaa.accounts.domain.valueobject.AccountId;
 import com.jcaa.accounts.domain.valueobject.AccountNumber;
 import com.jcaa.accounts.domain.valueobject.UserEmail;
 import com.jcaa.accounts.domain.valueobject.UserId;
+import com.jcaa.accounts.domain.valueobject.UserName;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
@@ -42,11 +44,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class CreateAccountServiceTest {
 
-  private static final UserEmail EMAIL = new UserEmail("john@example.com");
+  private static final AccountOwner OWNER =
+      new AccountOwner(new UserEmail("john@example.com"), new UserName("John Arrieta"));
 
   @Mock private SaveAccountPort saveAccountPort;
   @Mock private GetAccountByUserIdPort getAccountByUserIdPort;
-  @Mock private GetUserEmailPort getUserEmailPort;
+  @Mock private GetAccountOwnerPort getAccountOwnerPort;
   @Mock private PublishAccountCreatedEventPort publishAccountCreatedEventPort;
 
   private CreateAccountService service;
@@ -58,19 +61,19 @@ class CreateAccountServiceTest {
           new CreateAccountService(
               saveAccountPort,
               getAccountByUserIdPort,
-              getUserEmailPort,
+              getAccountOwnerPort,
               publishAccountCreatedEventPort,
               validatorFactory.getValidator());
     }
   }
 
   @Test
-  @DisplayName("execute() guarda la cuenta ACTIVE en COP y publica account.created con el email")
+  @DisplayName("execute() guarda la cuenta ACTIVE en COP y publica account.created con email y nombre")
   void shouldSaveAndPublishWhenUserHasNoAccount() {
     // Arrange
     final CreateAccountCommand command = new CreateAccountCommand("u-1", null);
     when(getAccountByUserIdPort.getByUserId(new UserId("u-1"))).thenReturn(Optional.empty());
-    when(getUserEmailPort.getEmailByUserId(new UserId("u-1"))).thenReturn(Optional.of(EMAIL));
+    when(getAccountOwnerPort.getOwnerByUserId(new UserId("u-1"))).thenReturn(Optional.of(OWNER));
     when(saveAccountPort.save(any(AccountModel.class))).thenAnswer(inv -> inv.getArgument(0));
 
     // Act
@@ -86,7 +89,8 @@ class CreateAccountServiceTest {
         () -> assertEquals(AccountStatus.ACTIVE, result.getStatus()),
         () -> assertSame(result, eventCaptor.getValue().getAccount()),
         () -> assertEquals("john@example.com", eventCaptor.getValue().payload().get("email")),
-        () -> assertEquals(Optional.of(EMAIL), result.ownerEmail()));
+        () -> assertEquals("John Arrieta", eventCaptor.getValue().payload().get("name")),
+        () -> assertEquals(Optional.of(OWNER), result.owner()));
   }
 
   @Test
@@ -95,7 +99,7 @@ class CreateAccountServiceTest {
     // Arrange
     final CreateAccountCommand command = new CreateAccountCommand("u-1", "usd");
     when(getAccountByUserIdPort.getByUserId(any())).thenReturn(Optional.empty());
-    when(getUserEmailPort.getEmailByUserId(any())).thenReturn(Optional.of(EMAIL));
+    when(getAccountOwnerPort.getOwnerByUserId(any())).thenReturn(Optional.of(OWNER));
     when(saveAccountPort.save(any(AccountModel.class))).thenAnswer(inv -> inv.getArgument(0));
 
     // Act
@@ -111,7 +115,7 @@ class CreateAccountServiceTest {
     // Arrange
     final CreateAccountCommand command = new CreateAccountCommand("u-9", null);
     when(getAccountByUserIdPort.getByUserId(any())).thenReturn(Optional.empty());
-    when(getUserEmailPort.getEmailByUserId(new UserId("u-9"))).thenReturn(Optional.empty());
+    when(getAccountOwnerPort.getOwnerByUserId(new UserId("u-9"))).thenReturn(Optional.empty());
 
     // Act & Assert
     assertThrows(UserNotFoundException.class, () -> service.execute(command));
@@ -134,7 +138,7 @@ class CreateAccountServiceTest {
 
     // Act & Assert
     assertThrows(AccountAlreadyExistsException.class, () -> service.execute(command));
-    verifyNoInteractions(getUserEmailPort);
+    verifyNoInteractions(getAccountOwnerPort);
     verify(saveAccountPort, never()).save(any());
     verify(publishAccountCreatedEventPort, never()).publish(any());
   }
@@ -159,7 +163,7 @@ class CreateAccountServiceTest {
 
     // Act & Assert
     assertThrows(InvalidAccountCurrencyException.class, () -> service.execute(command));
-    verifyNoInteractions(getUserEmailPort);
+    verifyNoInteractions(getAccountOwnerPort);
     verify(saveAccountPort, never()).save(any());
   }
 }

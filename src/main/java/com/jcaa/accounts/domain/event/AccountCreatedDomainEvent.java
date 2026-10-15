@@ -1,7 +1,7 @@
 package com.jcaa.accounts.domain.event;
 
 import com.jcaa.accounts.domain.model.AccountModel;
-import com.jcaa.accounts.domain.valueobject.UserEmail;
+import com.jcaa.accounts.domain.model.AccountOwner;
 import java.util.Map;
 import lombok.Getter;
 
@@ -11,12 +11,12 @@ public final class AccountCreatedDomainEvent extends DomainEvent {
   private static final String EVENT_NAME = "account.created";
 
   private final AccountModel account;
-  private final UserEmail userEmail;
+  private final AccountOwner owner;
 
-  public AccountCreatedDomainEvent(final AccountModel account, final UserEmail userEmail) {
+  public AccountCreatedDomainEvent(final AccountModel account, final AccountOwner owner) {
     super(EVENT_NAME);
     this.account = account;
-    this.userEmail = userEmail;
+    this.owner = owner;
   }
 
   @Override
@@ -24,7 +24,8 @@ public final class AccountCreatedDomainEvent extends DomainEvent {
     return Map.of(
         "id", account.getId().value(),
         "userId", account.getUserId().value(),
-        "email", userEmail.value(),
+        "email", owner.email().value(),
+        "name", owner.name().value(),
         "accountNumber", account.getAccountNumber().value(),
         "balance", account.getBalance().toString(),
         "currency", account.getCurrency().name(),

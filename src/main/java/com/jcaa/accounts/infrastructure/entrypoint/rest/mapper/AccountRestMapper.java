@@ -5,7 +5,6 @@ import com.jcaa.accounts.application.service.dto.command.DeleteAccountCommand;
 import com.jcaa.accounts.application.service.dto.query.GetAccountByIdQuery;
 import com.jcaa.accounts.application.service.dto.query.GetAccountByUserIdQuery;
 import com.jcaa.accounts.domain.model.AccountModel;
-import com.jcaa.accounts.domain.valueobject.UserEmail;
 import com.jcaa.accounts.infrastructure.entrypoint.rest.dto.request.CreateAccountRestRequest;
 import com.jcaa.accounts.infrastructure.entrypoint.rest.dto.response.AccountRestResponse;
 import lombok.experimental.UtilityClass;
@@ -33,7 +32,8 @@ public class AccountRestMapper {
     return new AccountRestResponse(
         account.getId().value(),
         account.getUserId().value(),
-        account.ownerEmail().map(UserEmail::value).orElse(null),
+        account.owner().map(owner -> owner.email().value()).orElse(null),
+        account.owner().map(owner -> owner.name().value()).orElse(null),
         account.getAccountNumber().value(),
         account.getBalance().value(),
         account.getCurrency().name(),
