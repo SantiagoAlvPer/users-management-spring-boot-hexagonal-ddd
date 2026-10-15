@@ -1,6 +1,7 @@
 package com.jcaa.accounts.application.service.mapper;
 
 import com.jcaa.accounts.application.service.dto.command.CreateAccountCommand;
+import com.jcaa.accounts.application.service.dto.command.DeleteAccountCommand;
 import com.jcaa.accounts.application.service.dto.query.GetAccountByIdQuery;
 import com.jcaa.accounts.application.service.dto.query.GetAccountByUserIdQuery;
 import com.jcaa.accounts.domain.enums.AccountCurrency;
@@ -28,6 +29,10 @@ public class AccountApplicationMapper {
 
   public AccountId fromGetByIdQueryToAccountId(final GetAccountByIdQuery query) {
     return new AccountId(query.id());
+  }
+
+  public AccountId fromDeleteCommandToAccountId(final DeleteAccountCommand command) {
+    return new AccountId(command.id());
   }
 
   public UserId fromGetByUserIdQueryToUserId(final GetAccountByUserIdQuery query) {

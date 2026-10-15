@@ -1,16 +1,21 @@
 package com.jcaa.accounts.infrastructure.entrypoint.rest.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jcaa.accounts.application.port.in.CreateAccountUseCase;
+import com.jcaa.accounts.application.port.in.DeleteAccountUseCase;
 import com.jcaa.accounts.application.port.in.GetAccountByIdUseCase;
 import com.jcaa.accounts.application.port.in.GetAccountByUserIdUseCase;
+import com.jcaa.accounts.application.service.dto.command.DeleteAccountCommand;
 import com.jcaa.accounts.application.service.dto.query.GetAccountByIdQuery;
 import com.jcaa.accounts.application.service.dto.query.GetAccountByUserIdQuery;
 import com.jcaa.accounts.domain.enums.AccountCurrency;
@@ -45,6 +50,7 @@ class AccountRestControllerTest {
   @MockBean private CreateAccountUseCase createAccountUseCase;
   @MockBean private GetAccountByIdUseCase getAccountByIdUseCase;
   @MockBean private GetAccountByUserIdUseCase getAccountByUserIdUseCase;
+  @MockBean private DeleteAccountUseCase deleteAccountUseCase;
 
   @Test
   @DisplayName("POST /api/accounts devuelve 201 con la cuenta creada")
@@ -146,5 +152,25 @@ class AccountRestControllerTest {
         .perform(get("/api/accounts/user/u-1"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.userId").value("u-1"));
+  }
+
+  @Test
+  @DisplayName("DELETE /api/accounts/{id} devuelve 204")
+  void shouldDeleteAccount() throws Exception {
+    // Act & Assert
+    mockMvc.perform(delete("/api/accounts/a-1")).andExpect(status().isNoContent());
+    verify(deleteAccountUseCase).execute(new DeleteAccountCommand("a-1"));
+  }
+
+  @Test
+  @DisplayName("DELETE /api/accounts/{id} devuelve 404 si la cuenta no existe")
+  void shouldReturnNotFoundOnDeleteWhenAccountDoesNotExist() throws Exception {
+    // Arrange
+    doThrow(AccountNotFoundException.becauseIdWasNotFound("x"))
+        .when(deleteAccountUseCase)
+        .execute(new DeleteAccountCommand("x"));
+
+    // Act & Assert
+    mockMvc.perform(delete("/api/accounts/x")).andExpect(status().isNotFound());
   }
 }

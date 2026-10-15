@@ -14,8 +14,9 @@ Paso 7: accounts --account.created (async)-->  Kafka (Aiven)
 ```
 domain/                    Java puro: AccountModel, value objects, enums, eventos, excepciones
 application/
-  port/in/                 CreateAccountUseCase, GetAccountByIdUseCase, GetAccountByUserIdUseCase
-  port/out/                SaveAccountPort, GetAccountByIdPort, GetAccountByUserIdPort,
+  port/in/                 CreateAccountUseCase, GetAccountByIdUseCase, GetAccountByUserIdUseCase,
+                           DeleteAccountUseCase
+  port/out/                SaveAccountPort, GetAccountByIdPort, GetAccountByUserIdPort, DeleteAccountPort,
                            GetUserEmailPort, PublishAccountCreatedEventPort
   service/                 Implementaciones de los casos de uso (+ dto command/query, mapper)
 infrastructure/
@@ -35,6 +36,7 @@ Regla de dependencias: `domain <- application <- infrastructure`.
 | `POST` | `/api/accounts` | Crea la cuenta de un usuario (lo llama Users) | 201, 400, 404, 409 |
 | `GET` | `/api/accounts/{id}` | Cuenta por id | 200, 404 |
 | `GET` | `/api/accounts/user/{userId}` | Cuenta de un usuario | 200, 404 |
+| `DELETE` | `/api/accounts/{id}` | Borra una cuenta | 204, 404 |
 | `GET` | `/actuator/health` | Health check (Render) | 200 |
 
 Body de creación (`currency` es opcional, `COP` por defecto; soporta `COP` y `USD`):

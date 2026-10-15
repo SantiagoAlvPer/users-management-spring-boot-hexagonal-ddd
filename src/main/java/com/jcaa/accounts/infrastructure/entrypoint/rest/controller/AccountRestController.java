@@ -1,6 +1,7 @@
 package com.jcaa.accounts.infrastructure.entrypoint.rest.controller;
 
 import com.jcaa.accounts.application.port.in.CreateAccountUseCase;
+import com.jcaa.accounts.application.port.in.DeleteAccountUseCase;
 import com.jcaa.accounts.application.port.in.GetAccountByIdUseCase;
 import com.jcaa.accounts.application.port.in.GetAccountByUserIdUseCase;
 import com.jcaa.accounts.domain.model.AccountModel;
@@ -10,6 +11,7 @@ import com.jcaa.accounts.infrastructure.entrypoint.rest.mapper.AccountRestMapper
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +28,7 @@ public class AccountRestController {
   private final CreateAccountUseCase createAccountUseCase;
   private final GetAccountByIdUseCase getAccountByIdUseCase;
   private final GetAccountByUserIdUseCase getAccountByUserIdUseCase;
+  private final DeleteAccountUseCase deleteAccountUseCase;
 
   /** Paso 5: el servicio de Users llama este endpoint de forma sincrona. */
   @PostMapping
@@ -48,5 +51,11 @@ public class AccountRestController {
     final AccountModel account =
         getAccountByUserIdUseCase.execute(AccountRestMapper.toGetByUserIdQuery(userId));
     return AccountRestMapper.toResponse(account);
+  }
+
+  @DeleteMapping("/{id}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void delete(@PathVariable final String id) {
+    deleteAccountUseCase.execute(AccountRestMapper.toDeleteCommand(id));
   }
 }

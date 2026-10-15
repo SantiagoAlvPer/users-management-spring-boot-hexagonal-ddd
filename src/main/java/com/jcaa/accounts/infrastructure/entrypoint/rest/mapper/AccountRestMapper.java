@@ -1,6 +1,7 @@
 package com.jcaa.accounts.infrastructure.entrypoint.rest.mapper;
 
 import com.jcaa.accounts.application.service.dto.command.CreateAccountCommand;
+import com.jcaa.accounts.application.service.dto.command.DeleteAccountCommand;
 import com.jcaa.accounts.application.service.dto.query.GetAccountByIdQuery;
 import com.jcaa.accounts.application.service.dto.query.GetAccountByUserIdQuery;
 import com.jcaa.accounts.domain.model.AccountModel;
@@ -17,6 +18,10 @@ public class AccountRestMapper {
 
   public GetAccountByIdQuery toGetByIdQuery(final String id) {
     return new GetAccountByIdQuery(id);
+  }
+
+  public DeleteAccountCommand toDeleteCommand(final String id) {
+    return new DeleteAccountCommand(id);
   }
 
   public GetAccountByUserIdQuery toGetByUserIdQuery(final String userId) {

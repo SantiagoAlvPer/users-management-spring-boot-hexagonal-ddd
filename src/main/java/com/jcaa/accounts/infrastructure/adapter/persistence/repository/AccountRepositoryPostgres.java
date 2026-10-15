@@ -1,5 +1,6 @@
 package com.jcaa.accounts.infrastructure.adapter.persistence.repository;
 
+import com.jcaa.accounts.application.port.out.DeleteAccountPort;
 import com.jcaa.accounts.application.port.out.GetAccountByIdPort;
 import com.jcaa.accounts.application.port.out.GetAccountByUserIdPort;
 import com.jcaa.accounts.application.port.out.SaveAccountPort;
@@ -25,7 +26,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
 public class AccountRepositoryPostgres
-    implements SaveAccountPort, GetAccountByIdPort, GetAccountByUserIdPort {
+    implements SaveAccountPort, GetAccountByIdPort, GetAccountByUserIdPort, DeleteAccountPort {
 
   private static final String SQL_INSERT =
       "INSERT INTO accounts "
@@ -41,6 +42,8 @@ public class AccountRepositoryPostgres
       "SELECT id, user_id, account_number, balance, currency, status "
           + "FROM accounts "
           + "WHERE user_id = ? LIMIT 1";
+
+  private static final String SQL_DELETE = "DELETE FROM accounts WHERE id = ?";
 
   private static final String USER_ID_UNIQUE_KEY = "uk_accounts_user_id";
   // SQLState de PostgreSQL para violacion de restriccion UNIQUE
@@ -75,6 +78,17 @@ public class AccountRepositoryPostgres
       return readSingle(statement);
     } catch (final SQLException exception) {
       throw PersistenceException.becauseFindByUserIdFailed(userId.value(), exception);
+    }
+  }
+
+  @Override
+  public void delete(final AccountId accountId) {
+    try (final Connection connection = dataSource.getConnection();
+        final PreparedStatement statement = connection.prepareStatement(SQL_DELETE)) {
+      statement.setString(1, accountId.value());
+      statement.executeUpdate();
+    } catch (final SQLException exception) {
+      throw PersistenceException.becauseDeleteFailed(accountId.value(), exception);
     }
   }
 
