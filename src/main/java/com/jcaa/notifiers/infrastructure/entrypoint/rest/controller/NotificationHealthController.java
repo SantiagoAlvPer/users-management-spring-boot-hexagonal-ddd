@@ -46,4 +46,13 @@ public class NotificationHealthController {
     return ResponseEntity.ok(
         Map.of("message", "Notificación de usuario actualizado enviada exitosamente a " + command.email()));
   }
+
+  @PostMapping("/api/notifications/test/account-created")
+  public ResponseEntity<Map<String, String>> testAccountCreated(
+      @Valid @RequestBody final com.jcaa.notifiers.application.service.dto.AccountCreatedNotificationCommand command) {
+    log.info("[NotificationHealthController] Prueba manual de notificación de cuenta: {}", command.email());
+    sendNotificationUseCase.notifyAccountCreated(command);
+    return ResponseEntity.ok(
+        Map.of("message", "Notificación de cuenta creada enviada exitosamente a " + command.email()));
+  }
 }

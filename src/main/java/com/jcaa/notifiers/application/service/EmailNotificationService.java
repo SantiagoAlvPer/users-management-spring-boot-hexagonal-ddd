@@ -2,6 +2,7 @@ package com.jcaa.notifiers.application.service;
 
 import com.jcaa.notifiers.application.port.in.SendNotificationUseCase;
 import com.jcaa.notifiers.application.port.out.EmailSenderPort;
+import com.jcaa.notifiers.application.service.dto.AccountCreatedNotificationCommand;
 import com.jcaa.notifiers.application.service.dto.UserCreatedNotificationCommand;
 import com.jcaa.notifiers.application.service.dto.UserUpdatedNotificationCommand;
 import com.jcaa.notifiers.domain.exception.EmailSenderException;
@@ -22,12 +23,17 @@ public class EmailNotificationService implements SendNotificationUseCase {
 
   private static final String SUBJECT_CREATED = "Tu cuenta ha sido creada — Gestion de Usuarios";
   private static final String SUBJECT_UPDATED = "Tu cuenta ha sido actualizada — Gestion de Usuarios";
+  private static final String SUBJECT_ACCOUNT_CREATED =
+      "Tu nueva cuenta bancaria ha sido creada — Gestion de Usuarios";
 
   private static final String TOKEN_NAME = "name";
   private static final String TOKEN_EMAIL = "email";
   private static final String TOKEN_PASSWORD = "password";
   private static final String TOKEN_ROLE = "role";
   private static final String TOKEN_STATUS = "status";
+  private static final String TOKEN_ACCOUNT_NUMBER = "accountNumber";
+  private static final String TOKEN_BALANCE = "balance";
+  private static final String TOKEN_CURRENCY = "currency";
 
   private static final String LOG_SEND_FAILED =
       "[EmailNotificationService] correo no enviado a {}. Causa: {}";
@@ -72,6 +78,33 @@ public class EmailNotificationService implements SendNotificationUseCase {
 
     final EmailDestinationModel destination =
         new EmailDestinationModel(command.email(), command.name(), SUBJECT_UPDATED, body);
+    sendOrLog(destination);
+  }
+
+  @Override
+  public void notifyAccountCreated(final AccountCreatedNotificationCommand command) {
+    final String template = loadTemplate("account-created.html");
+    final String name =
+        (command.name() != null && !command.name().isBlank()) ? command.name() : "Titular";
+    final String balance =
+        (command.balance() != null && !command.balance().isBlank()) ? command.balance() : "0.0";
+    final String currency =
+        (command.currency() != null && !command.currency().isBlank()) ? command.currency() : "COP";
+    final String status =
+        (command.status() != null && !command.status().isBlank()) ? command.status() : "ACTIVE";
+
+    final String body =
+        renderTemplate(
+            template,
+            Map.of(
+                TOKEN_NAME, name,
+                TOKEN_ACCOUNT_NUMBER, command.accountNumber(),
+                TOKEN_BALANCE, balance,
+                TOKEN_CURRENCY, currency,
+                TOKEN_STATUS, status));
+
+    final EmailDestinationModel destination =
+        new EmailDestinationModel(command.email(), name, SUBJECT_ACCOUNT_CREATED, body);
     sendOrLog(destination);
   }
 

@@ -98,4 +98,31 @@ class EmailNotificationServiceTest {
 
     assertThrows(EmailSenderException.class, () -> service.notifyUserCreated(command));
   }
+
+  @Test
+  @DisplayName("construye y envia correo de creacion de cuenta bancaria con la plantilla renderizada")
+  void shouldSendAccountCreatedNotification() {
+    final com.jcaa.notifiers.application.service.dto.AccountCreatedNotificationCommand command =
+        new com.jcaa.notifiers.application.service.dto.AccountCreatedNotificationCommand(
+            "Juanito Perez",
+            "juanito@example.com",
+            "ACC-123456",
+            "1000.00",
+            "COP",
+            "ACTIVE");
+
+    assertDoesNotThrow(() -> service.notifyAccountCreated(command));
+
+    final ArgumentCaptor<EmailDestinationModel> captor =
+        ArgumentCaptor.forClass(EmailDestinationModel.class);
+    verify(emailSenderPort).send(captor.capture());
+
+    final EmailDestinationModel captured = captor.getValue();
+    assertEquals("juanito@example.com", captured.getDestinationEmail());
+    assertEquals("Juanito Perez", captured.getDestinationName());
+    assertTrue(captured.getBody().contains("ACC-123456"));
+    assertTrue(captured.getBody().contains("1000.00"));
+    assertTrue(captured.getBody().contains("COP"));
+    assertTrue(captured.getBody().contains("ACTIVE"));
+  }
 }
