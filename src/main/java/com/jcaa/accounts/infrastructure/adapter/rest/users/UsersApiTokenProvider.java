@@ -1,5 +1,5 @@
 package com.jcaa.accounts.infrastructure.adapter.rest.users;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import com.jcaa.accounts.infrastructure.adapter.rest.users.dto.LoginApiRequest;
 import com.jcaa.accounts.infrastructure.adapter.rest.users.dto.LoginApiResponse;
 import com.jcaa.accounts.infrastructure.adapter.rest.users.exception.UsersServiceException;
@@ -31,6 +31,7 @@ public class UsersApiTokenProvider {
   private String cachedToken;
   private Instant expiresAt = Instant.EPOCH;
 
+  @Autowired
   public UsersApiTokenProvider(
       final RestClient usersRestClient, final UsersApiProperties properties) {
     this(usersRestClient, properties, Clock.systemUTC());
