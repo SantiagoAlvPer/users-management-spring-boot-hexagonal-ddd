@@ -48,7 +48,7 @@ public class CreateAccountService implements CreateAccountUseCase {
     // Antes de guardar: si el usuario no existe, no queda una cuenta huerfana
     final UserEmail userEmail = findUserEmail(userId);
 
-    final AccountModel savedAccount = saveAccountPort.save(accountToSave);
+    final AccountModel savedAccount = saveAccountPort.save(accountToSave.withOwnerEmail(userEmail));
     log.info(LOG_CREATED, savedAccount.getId().value());
 
     publishAccountCreatedEventPort.publish(new AccountCreatedDomainEvent(savedAccount, userEmail));

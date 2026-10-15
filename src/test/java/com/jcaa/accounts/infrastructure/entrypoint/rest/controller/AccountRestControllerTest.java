@@ -25,6 +25,7 @@ import com.jcaa.accounts.domain.exception.UserNotFoundException;
 import com.jcaa.accounts.domain.model.AccountModel;
 import com.jcaa.accounts.domain.valueobject.AccountId;
 import com.jcaa.accounts.domain.valueobject.AccountNumber;
+import com.jcaa.accounts.domain.valueobject.UserEmail;
 import com.jcaa.accounts.domain.valueobject.UserId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,7 +57,8 @@ class AccountRestControllerTest {
   @DisplayName("POST /api/accounts devuelve 201 con la cuenta creada")
   void shouldCreateAccount() throws Exception {
     // Arrange
-    when(createAccountUseCase.execute(any())).thenReturn(ACCOUNT);
+    when(createAccountUseCase.execute(any()))
+        .thenReturn(ACCOUNT.withOwnerEmail(new UserEmail("john@example.com")));
 
     // Act & Assert
     mockMvc
@@ -67,6 +69,7 @@ class AccountRestControllerTest {
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.id").value("a-1"))
         .andExpect(jsonPath("$.userId").value("u-1"))
+        .andExpect(jsonPath("$.email").value("john@example.com"))
         .andExpect(jsonPath("$.accountNumber").value("1234567890"))
         .andExpect(jsonPath("$.balance").value(0.0))
         .andExpect(jsonPath("$.currency").value("COP"))

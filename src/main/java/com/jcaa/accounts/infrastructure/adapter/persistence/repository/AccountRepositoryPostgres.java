@@ -9,6 +9,7 @@ import com.jcaa.accounts.domain.exception.AccountNotFoundException;
 import com.jcaa.accounts.domain.model.AccountModel;
 import com.jcaa.accounts.domain.valueobject.AccountId;
 import com.jcaa.accounts.domain.valueobject.UserId;
+import com.jcaa.accounts.infrastructure.adapter.persistence.config.UsersTableName;
 import com.jcaa.accounts.infrastructure.adapter.persistence.dto.AccountPersistenceDto;
 import com.jcaa.accounts.infrastructure.adapter.persistence.exception.PersistenceException;
 import com.jcaa.accounts.infrastructure.adapter.persistence.mapper.AccountPersistenceMapper;
@@ -19,12 +20,11 @@ import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Optional;
 import javax.sql.DataSource;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 /** Adaptador JDBC para PostgreSQL. Implementa todos los puertos de salida de persistencia. */
 @Repository
-@RequiredArgsConstructor
 public class AccountRepositoryPostgres
     implements SaveAccountPort, GetAccountByIdPort, GetAccountByUserIdPort, DeleteAccountPort {
 
@@ -33,15 +33,12 @@ public class AccountRepositoryPostgres
           + "(id, user_id, account_number, balance, currency, status, created_at, updated_at) "
           + "VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
 
-  private static final String SQL_SELECT_BY_ID =
-      "SELECT id, user_id, account_number, balance, currency, status "
-          + "FROM accounts "
-          + "WHERE id = ? LIMIT 1";
-
-  private static final String SQL_SELECT_BY_USER_ID =
-      "SELECT id, user_id, account_number, balance, currency, status "
-          + "FROM accounts "
-          + "WHERE user_id = ? LIMIT 1";
+  // LEFT JOIN: la cuenta se devuelve aunque el usuario ya no exista (owner_email = null)
+  private static final String SQL_SELECT_TEMPLATE =
+      "SELECT a.id, a.user_id, a.account_number, a.balance, a.currency, a.status, "
+          + "u.email AS owner_email "
+          + "FROM accounts a LEFT JOIN %s u ON u.id::text = a.user_id "
+          + "WHERE a.%s = ? LIMIT 1";
 
   private static final String SQL_DELETE = "DELETE FROM accounts WHERE id = ?";
 
@@ -50,6 +47,16 @@ public class AccountRepositoryPostgres
   private static final String UNIQUE_VIOLATION = "23505";
 
   private final DataSource dataSource;
+  private final String selectByIdSql;
+  private final String selectByUserIdSql;
+
+  public AccountRepositoryPostgres(
+      final DataSource dataSource, @Value("${users.table-name}") final String usersTableName) {
+    final String table = UsersTableName.requireValid(usersTableName);
+    this.dataSource = dataSource;
+    this.selectByIdSql = String.format(SQL_SELECT_TEMPLATE, table, "id");
+    this.selectByUserIdSql = String.format(SQL_SELECT_TEMPLATE, table, "user_id");
+  }
 
   @Override
   public AccountModel save(final AccountModel account) {
@@ -62,7 +69,7 @@ public class AccountRepositoryPostgres
   @Override
   public Optional<AccountModel> getById(final AccountId accountId) {
     try (final Connection connection = dataSource.getConnection();
-        final PreparedStatement statement = connection.prepareStatement(SQL_SELECT_BY_ID)) {
+        final PreparedStatement statement = connection.prepareStatement(selectByIdSql)) {
       statement.setString(1, accountId.value());
       return readSingle(statement);
     } catch (final SQLException exception) {
@@ -73,7 +80,7 @@ public class AccountRepositoryPostgres
   @Override
   public Optional<AccountModel> getByUserId(final UserId userId) {
     try (final Connection connection = dataSource.getConnection();
-        final PreparedStatement statement = connection.prepareStatement(SQL_SELECT_BY_USER_ID)) {
+        final PreparedStatement statement = connection.prepareStatement(selectByUserIdSql)) {
       statement.setString(1, userId.value());
       return readSingle(statement);
     } catch (final SQLException exception) {

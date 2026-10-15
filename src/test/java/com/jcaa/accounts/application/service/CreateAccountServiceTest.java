@@ -85,7 +85,8 @@ class CreateAccountServiceTest {
         () -> assertEquals(AccountCurrency.COP, result.getCurrency()),
         () -> assertEquals(AccountStatus.ACTIVE, result.getStatus()),
         () -> assertSame(result, eventCaptor.getValue().getAccount()),
-        () -> assertEquals("john@example.com", eventCaptor.getValue().payload().get("email")));
+        () -> assertEquals("john@example.com", eventCaptor.getValue().payload().get("email")),
+        () -> assertEquals(Optional.of(EMAIL), result.ownerEmail()));
   }
 
   @Test

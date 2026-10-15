@@ -51,6 +51,7 @@ Respuesta `201`:
 {
   "id": "2b0b8a59-6a43-4d0e-9a59-1f0f2d1c4c11",
   "userId": "8f684dc4-0c67-4813-8d58-7b5e7f7937b8",
+  "email": "john@example.com",
   "accountNumber": "4821937750",
   "balance": 0.00,
   "currency": "COP",
@@ -96,7 +97,7 @@ La publicación es asíncrona: si Kafka falla, el error queda en el log y la cue
 | `KAFKA_CA_CERT` | Contenido completo de `ca.pem` de Aiven (perfil `aiven`) | — |
 
 ### Base compartida con Users
-Accounts usa la **misma base PostgreSQL que Users**: las variables `DB_*` deben ser las mismas que tiene Users. Accounts crea y escribe solo su tabla `accounts`; de la tabla `users` únicamente lee `email` por `id` (sirve si `id` es `VARCHAR` o `UUID`).
+Accounts usa la **misma base PostgreSQL que Users**: las variables `DB_*` deben ser las mismas que tiene Users. Accounts crea y escribe solo su tabla `accounts`; de la tabla `users` únicamente lee `email` por `id` (sirve si `id` es `VARCHAR` o `UUID`). Las respuestas de la API incluyen ese `email` (vía `LEFT JOIN`); si el usuario ya no existe, `email` sale `null`.
 
 La tabla `accounts` se crea sola al arrancar (`schema.sql`, `CREATE TABLE IF NOT EXISTS`).
 

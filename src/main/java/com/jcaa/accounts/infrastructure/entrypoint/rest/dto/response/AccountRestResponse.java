@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 public record AccountRestResponse(
     String id,
     String userId,
+    String email,
     String accountNumber,
     BigDecimal balance,
     String currency,
