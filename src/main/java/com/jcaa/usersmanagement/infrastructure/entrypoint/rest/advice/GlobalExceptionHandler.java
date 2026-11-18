@@ -1,13 +1,16 @@
 package com.jcaa.usersmanagement.infrastructure.entrypoint.rest.advice;
 
 import com.jcaa.usersmanagement.domain.exception.DomainException;
+import com.jcaa.usersmanagement.domain.exception.FileStorageException;
 import com.jcaa.usersmanagement.domain.exception.InvalidCredentialsException;
 import com.jcaa.usersmanagement.domain.exception.UserAlreadyExistsException;
+import com.jcaa.usersmanagement.domain.exception.UserFileNotFoundException;
 import com.jcaa.usersmanagement.domain.exception.UserNotFoundException;
 import com.jcaa.usersmanagement.infrastructure.adapter.persistence.exception.PersistenceException;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.response.ApiErrorResponse;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -22,6 +25,24 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.NOT_FOUND)
   public ApiErrorResponse handleUserNotFound(final UserNotFoundException exception) {
     return new ApiErrorResponse(HttpStatus.NOT_FOUND.value(), exception.getMessage());
+  }
+
+  @ExceptionHandler(UserFileNotFoundException.class)
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  public ApiErrorResponse handleUserFileNotFound(final UserFileNotFoundException exception) {
+    return new ApiErrorResponse(HttpStatus.NOT_FOUND.value(), exception.getMessage());
+  }
+
+  @ExceptionHandler(AccessDeniedException.class)
+  @ResponseStatus(HttpStatus.FORBIDDEN)
+  public ApiErrorResponse handleAccessDenied(final AccessDeniedException exception) {
+    return new ApiErrorResponse(HttpStatus.FORBIDDEN.value(), exception.getMessage());
+  }
+
+  @ExceptionHandler(FileStorageException.class)
+  @ResponseStatus(HttpStatus.BAD_GATEWAY)
+  public ApiErrorResponse handleFileStorage(final FileStorageException exception) {
+    return new ApiErrorResponse(HttpStatus.BAD_GATEWAY.value(), exception.getMessage());
   }
 
   @ExceptionHandler(UserAlreadyExistsException.class)

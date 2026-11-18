@@ -42,22 +42,42 @@ services:
       dockerfile: Dockerfile
     image: users-management-api:local
     environment:
-      PORT: "8080"
-      DB_HOST: postgres
-      DB_PORT: "5432"
-      DB_NAME: crud_usuarios
-      DB_USERNAME: users_app
-      DB_PASSWORD: local_users_password
-      DB_SSL_MODE: disable
-      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SMTP_HOST: smtp-relay.brevo.com
-      SMTP_PORT: "587"
+      PORT: ${PORT:-8080}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-crud_usuarios}
+      DB_USERNAME: ${DB_USERNAME:-users_app}
+      DB_PASSWORD: ${DB_PASSWORD:-local_users_password}
+      DB_SSL_MODE: ${DB_SSL_MODE:-disable}
+      DB_URL: ${DB_URL:-}
+      CACHE_TYPE: ${CACHE_TYPE:-none}
+      VALKEY_URI: ${VALKEY_URI:-redis://localhost:6379}
+      CACHE_USER_TTL_SECONDS: ${CACHE_USER_TTL_SECONDS:-300}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:29092}
+      KAFKA_SECURITY_PROTOCOL: ${KAFKA_SECURITY_PROTOCOL:-PLAINTEXT}
+      KAFKA_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM:-SCRAM-SHA-256}
+      KAFKA_USERNAME: ${KAFKA_USERNAME:-}
+      KAFKA_PASSWORD: ${KAFKA_PASSWORD:-}
+      KAFKA_SSL_CA_PEM: ${KAFKA_SSL_CA_PEM:-}
+      SMTP_HOST: ${SMTP_HOST:-smtp-relay.brevo.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USERNAME: ${SMTP_USERNAME:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS:-}
       SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Gestion de Usuarios}
       JWT_SECRET: ${JWT_SECRET:-ZGV2ZWxvcG1lbnQtb25seS1qd3Qtc2VjcmV0LW11c3QtYmUtcmVwbGFjZWQ=}
       JWT_EXPIRATION_SECONDS: ${JWT_EXPIRATION_SECONDS:-900}
+      B2_ENABLED: ${B2_ENABLED:-false}
+      B2_ENDPOINT: ${B2_ENDPOINT:-https://s3.us-east-005.backblazeb2.com}
+      B2_REGION: ${B2_REGION:-us-east-005}
+      B2_BUCKET: ${B2_BUCKET:-}
+      B2_KEY_ID: ${B2_KEY_ID:-}
+      B2_APP_KEY: ${B2_APP_KEY:-}
+      B2_PRESIGNED_URL_TTL_SECONDS: ${B2_PRESIGNED_URL_TTL_SECONDS:-300}
+      OPENSEARCH_ENABLED: ${OPENSEARCH_ENABLED:-false}
+      OPENSEARCH_URL: ${OPENSEARCH_URL:-}
+      OPENSEARCH_INDEX: ${OPENSEARCH_INDEX:-users}
+      OPENSEARCH_KAFKA_GROUP_ID: ${OPENSEARCH_KAFKA_GROUP_ID:-users-search-indexer}
     ports:
       - "8080:8080"
     depends_on:

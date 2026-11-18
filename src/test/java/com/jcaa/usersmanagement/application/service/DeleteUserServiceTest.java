@@ -5,7 +5,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.jcaa.usersmanagement.application.port.out.DeleteUserPort;
+import com.jcaa.usersmanagement.application.port.out.FileStoragePort;
 import com.jcaa.usersmanagement.application.port.out.GetUserByIdPort;
+import com.jcaa.usersmanagement.application.port.out.PublishUserEventPort;
 import com.jcaa.usersmanagement.application.service.dto.command.DeleteUserCommand;
 import com.jcaa.usersmanagement.domain.enums.UserRole;
 import com.jcaa.usersmanagement.domain.enums.UserStatus;
@@ -37,6 +39,8 @@ class DeleteUserServiceTest {
 
   @Mock private DeleteUserPort deleteUserPort;
   @Mock private GetUserByIdPort getUserByIdPort;
+  @Mock private FileStoragePort fileStoragePort;
+  @Mock private PublishUserEventPort publishUserEventPort;
 
   private DeleteUserService service;
 
@@ -44,7 +48,12 @@ class DeleteUserServiceTest {
   void setUp() {
     try (final ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory()) {
       service =
-          new DeleteUserService(deleteUserPort, getUserByIdPort, validatorFactory.getValidator());
+          new DeleteUserService(
+              deleteUserPort,
+              getUserByIdPort,
+              fileStoragePort,
+              publishUserEventPort,
+              validatorFactory.getValidator());
     }
   }
 

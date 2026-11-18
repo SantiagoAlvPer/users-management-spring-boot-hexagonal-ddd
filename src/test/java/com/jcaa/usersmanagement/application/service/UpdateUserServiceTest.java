@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import com.jcaa.usersmanagement.application.port.out.GetUserByEmailPort;
 import com.jcaa.usersmanagement.application.port.out.GetUserByIdPort;
+import com.jcaa.usersmanagement.application.port.out.PublishUserEventPort;
 import com.jcaa.usersmanagement.application.port.out.UpdateUserPort;
 import com.jcaa.usersmanagement.application.service.dto.command.UpdateUserCommand;
 import com.jcaa.usersmanagement.domain.enums.UserRole;
@@ -41,6 +42,7 @@ class UpdateUserServiceTest {
   @Mock private UpdateUserPort updateUserPort;
   @Mock private GetUserByIdPort getUserByIdPort;
   @Mock private GetUserByEmailPort getUserByEmailPort;
+  @Mock private PublishUserEventPort publishUserEventPort;
   @Mock private EmailNotificationService emailNotificationService;
 
   private UpdateUserService service;
@@ -59,6 +61,7 @@ class UpdateUserServiceTest {
               updateUserPort,
               getUserByIdPort,
               getUserByEmailPort,
+              publishUserEventPort,
               emailNotificationService,
               validatorFactory.getValidator());
     }

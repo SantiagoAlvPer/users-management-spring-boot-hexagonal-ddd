@@ -27,6 +27,7 @@
     <!-- Declarativas: Mockito y Jacoco siguen siendo explícitas para tener control -->
     <mockito.version>5.15.2</mockito.version>
     <jacoco.version>0.8.11</jacoco.version>
+    <awssdk.version>2.29.26</awssdk.version>
   </properties>
 
   <dependencies>
@@ -75,6 +76,13 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
+
+    <!-- AWS SDK v2 S3: cliente compatible S3 para Backblaze B2 (Guía 9) -->
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>s3</artifactId>
+      <version>${awssdk.version}</version>
     </dependency>
 
     <!-- ======================================================== -->
