@@ -76,6 +76,12 @@ public class BackblazeB2StorageAdapter implements FileStoragePort {
               .build();
       s3Client.putObject(request, RequestBody.fromBytes(content));
     } catch (final RuntimeException exception) {
+      log.error(
+          "[BackblazeB2StorageAdapter] Error al subir archivo '{}' al bucket '{}': {}",
+          key,
+          properties.bucket(),
+          exception.getMessage(),
+          exception);
       throw new FileStorageException("Error al subir archivo a Backblaze B2.", exception);
     }
   }
