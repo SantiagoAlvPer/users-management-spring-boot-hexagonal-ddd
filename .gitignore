@@ -41,3 +41,14 @@ build/
 *.log
 
 /spec/
+.env
+.env.*
+!.env.example
+
+### Assistant & IDE rules ###
+.agent/
+.cursor/
+.cursorrules
+.windsurfrules
+CLAUDE.md
+AGENTS.md

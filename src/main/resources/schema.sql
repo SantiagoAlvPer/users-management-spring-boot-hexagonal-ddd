@@ -29,3 +29,30 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
+-- =============================================
+-- Cuentas (Wallet)
+-- =============================================
+CREATE TABLE IF NOT EXISTS accounts (
+    id          VARCHAR(36)  NOT NULL PRIMARY KEY,
+    user_id     VARCHAR(36)  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    owner_name  VARCHAR(100) NOT NULL,
+    owner_email VARCHAR(150) NOT NULL,
+    type        VARCHAR(20)  NOT NULL DEFAULT 'SAVINGS',
+    status      VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE',
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_user_account_type UNIQUE (user_id, type)
+);
+
+-- =============================================
+-- Archivos de Usuario (Backblaze B2 - Guía 9)
+-- =============================================
+CREATE TABLE IF NOT EXISTS user_files (
+    id            VARCHAR(36)  NOT NULL PRIMARY KEY,
+    user_id       VARCHAR(36)  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    file_key      VARCHAR(500) NOT NULL,
+    content_type  VARCHAR(100) NOT NULL,
+    size_bytes    BIGINT       NOT NULL,
+    created_at    TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+

@@ -12,13 +12,21 @@ services:
       - key: DB_PORT
         sync: false
       - key: DB_NAME
-        value: crud_usuarios
+        value: postgres
       - key: DB_USERNAME
         sync: false
       - key: DB_PASSWORD
         sync: false
       - key: DB_SSL_MODE
         value: require
+      - key: DB_URL
+        sync: false
+      - key: CACHE_TYPE
+        value: valkey
+      - key: VALKEY_URI
+        sync: false
+      - key: CACHE_USER_TTL_SECONDS
+        value: "300"
       - key: SMTP_HOST
         value: smtp-relay.brevo.com
       - key: SMTP_PORT

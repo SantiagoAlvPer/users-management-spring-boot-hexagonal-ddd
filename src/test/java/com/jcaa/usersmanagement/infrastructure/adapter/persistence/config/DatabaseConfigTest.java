@@ -28,4 +28,23 @@ class DatabaseConfigTest {
             "jdbc:postgresql://db.example.com:15425/crud_usuarios"
                 + "?sslmode=require");
   }
+
+  @Test
+  void shouldDefaultSslModeToRequireWhenNullOrBlank() {
+    // Arrange
+    final DatabaseConfig configWithNull =
+        new DatabaseConfig(HOST, PORT, DATABASE, USERNAME, PASSWORD, null);
+    final DatabaseConfig configWithBlank =
+        new DatabaseConfig(HOST, PORT, DATABASE, USERNAME, PASSWORD, "   ");
+
+    // Act
+    final String jdbcUrlNull = configWithNull.buildJdbcUrl();
+    final String jdbcUrlBlank = configWithBlank.buildJdbcUrl();
+
+    // Assert
+    assertThat(jdbcUrlNull)
+        .isEqualTo("jdbc:postgresql://db.example.com:15425/crud_usuarios?sslmode=require");
+    assertThat(jdbcUrlBlank)
+        .isEqualTo("jdbc:postgresql://db.example.com:15425/crud_usuarios?sslmode=require");
+  }
 }

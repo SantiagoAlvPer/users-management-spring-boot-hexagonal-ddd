@@ -16,6 +16,8 @@ import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.response.User
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.mapper.UserRestMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,6 +55,7 @@ public class UserRestController implements UserRestControllerDocs {
     return UserRestMapper.toResponseList(getAllUsersUseCase.execute());
   }
 
+  @Cacheable(value = "user", key = "#id")
   @GetMapping("/{id}")
   public UserRestResponse getById(@PathVariable final String id) {
     final GetUserByIdQuery query = UserRestMapper.toGetByIdQuery(id);
@@ -60,6 +63,7 @@ public class UserRestController implements UserRestControllerDocs {
     return UserRestMapper.toResponse(user);
   }
 
+  @CacheEvict(value = "user", key = "#id")
   @PutMapping("/{id}")
   public UserRestResponse update(
       @PathVariable final String id,
@@ -69,6 +73,7 @@ public class UserRestController implements UserRestControllerDocs {
     return UserRestMapper.toResponse(user);
   }
 
+  @CacheEvict(value = "user", key = "#id")
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void delete(@PathVariable final String id) {

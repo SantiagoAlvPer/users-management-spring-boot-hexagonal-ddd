@@ -65,6 +65,18 @@
       <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
 
+    <!-- Cache: abstracción de caché de Spring Boot -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-cache</artifactId>
+    </dependency>
+
+    <!-- Data Redis / Valkey: cliente Lettuce para conexión con Valkey (Aiven) -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
+
     <!-- ======================================================== -->
     <!-- Dependencias no gestionadas por el BOM de Spring Boot     -->
     <!-- ======================================================== -->
